@@ -1,0 +1,23 @@
+Build instructions:
+
+To build the JAR for Java Web Start, do:
+
+mvn assembly:assembly    [ build the fat jar ]
+ant -f sign.xml          [ sign the jar; you may need to customize sign.xml ]
+
+The signed fat jar will be in target/DicomBrowser-m.n-jar-with-dependencies.jar
+
+This requires a lot of things to be in your Maven 2 repository, notably
+including:
+
+* dcm4che2-core and dcm4che2-net (http://www.dcm4che.org)
+
+* dcm4xnat and ExtAttr (built by "mvn install" in their directories)
+
+* ui.jar from Apple's MRJ, version 1.5 or later; this is needed for compiling
+  but is not included in the fat jar.  The easiest way to get this is to take it
+  from a Mac with MRJ 1.5.0+; if that's not available, try looking around at
+  http://developer.apple.com/java
+  
+* ij.jar from ImageJ, version as specified in the pom.xml and .classpath
+  (but no earlier than 1.38L)

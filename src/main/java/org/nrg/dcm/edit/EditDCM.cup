@@ -1,0 +1,185 @@
+
+package org.nrg.dcm.edit;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.LinkedList;
+import java.io.InputStream;
+import java.io.FileOutputStream;
+import java.io.BufferedOutputStream;
+
+import java_cup.runtime.*;
+
+import org.dcm4che2.data.DicomObject;
+import org.dcm4che2.io.DicomInputStream;
+import org.dcm4che2.io.DicomOutputStream;
+
+import org.nrg.dcm.browse.DicomBrowser;
+
+parser code
+{:
+	private final NewAssignment.Scope scope = new NewAssignment.Scope();
+	
+	public void setGenerator(final Label label, final NewAssignment.Generator g) {
+		scope.setGenerator(label, g);
+	}
+	
+	NewAssignment makeNewAssignment(final int tag, final Label label) {
+		return new NewAssignment(scope, tag, label);
+	}
+	
+	public void syntax_error(final Symbol cur_tok) {
+		if (EditDCMSym.EOF == cur_tok.sym) {
+			report_error("Syntax error: unexpected end of file", "EOF");
+		} else {
+			report_error("Syntax error on token " + cur_tok + " (" + cur_tok.value + ")", cur_tok);
+		}
+	}
+	
+	public static void main(String args[]) throws Exception {
+		InputStream in = (args.length == 0 || args[0].equals("-"))
+			? System.in : new java.io.FileInputStream(args[0]);
+		File[] files = new File[(args.length < 1) ? 0 : (args.length - 1)];
+		for (int i = 1; i < args.length; i++)
+			files[i-1] = new File(args[i]);
+		apply(in, files, null, "-mod");
+	}
+	
+	public static void apply(InputStream commands, File[] dcmFiles, File outDir, String presuffix)
+	throws IOException,AttributeException,UIDGenerator.InvalidUIDRootException {
+		final EditDCMLex scanner = new EditDCMLex(commands);
+		final EditDCMCup parser = new EditDCMCup(scanner);
+		parser.setGenerator(scanner.getLabel("UID"), new UIDGenerator(DicomBrowser.prefs, DicomBrowser.UID_ROOT_PREF));
+		final Symbol root;
+		try {
+			root = parser.parse();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(1);
+			throw new RuntimeException("exit() failed");
+		}
+		final Statement s = (Statement)root.value;
+		
+		for (final File file : dcmFiles) {
+			// Read the original object
+			DicomInputStream in = new DicomInputStream(file);
+			DicomObject o = in.readDicomObject();
+			in.close();
+			
+			Collection<Action> actions = s.getActions(file, o);
+			if (!actions.isEmpty()) {
+				System.out.println(file.getPath());
+				for (Action action : actions)
+					action.apply();
+
+				// Construct the output file path				
+				if (outDir == null)
+					outDir = file.getParentFile();
+				else
+					outDir.mkdir();
+				String outName = file.getName();
+				if (presuffix != null) {
+					int lastDotPos = outName.lastIndexOf('.');
+					if (lastDotPos < 0)
+						outName += presuffix;
+					else
+						outName = outName.substring(0, lastDotPos) + presuffix + outName.substring(lastDotPos);
+				}
+
+				// Write the modified object			
+				FileOutputStream fos = new FileOutputStream(new File(outDir, outName));
+				BufferedOutputStream bos = new BufferedOutputStream(fos);
+				DicomOutputStream out = new DicomOutputStream(bos);
+				out.writeDicomFile(o);
+				out.close();
+			}
+		}
+	}
+:}
+action code
+{:
+	Statement lastStatement = null;
+:}
+
+terminal		EQUALS, MATCHES, CONSTRAINS,
+				ASSIGN, DELETE, ECHO, NEW,
+				ARGSEP, STATEMENT_END;
+terminal	Label 	LABEL;
+terminal	String	STRING;
+terminal	Integer	TAG;
+
+non terminal	Statement statements, statement;
+non terminal	Constraint constraint;
+non terminal	ConstraintMatch match;
+non terminal	List<Integer> taglist;
+non terminal	Operation operation;
+non terminal	String pattern, format;
+
+
+start with	statements;
+
+statements	::= statement:s
+					{: lastStatement = RESULT = s; :}
+			|	statements:sl statement:s		/* don't push the current statement if it was null */
+					{: lastStatement = RESULT = (s == null) ? lastStatement : new Statement(sl, s); :}
+			;
+
+statement	::= STATEMENT_END					{: RESULT = null; :}
+			|	operation:o STATEMENT_END		{: RESULT = new Statement(o); :}
+			|	constraint:c CONSTRAINS operation:o STATEMENT_END
+				{: RESULT = new Statement(c, o); :}
+			|	error STATEMENT_END
+			;
+				
+			
+constraint  ::= match: m
+				{: RESULT = new Constraint((ConstraintMatch)m); :}
+			|	error CONSTRAINS
+			;
+				
+match		::= TAG:t MATCHES pattern:p
+				{: RESULT = new ConstraintRegexpMatch(t, p); :}
+			|	TAG:t EQUALS STRING:s
+				{: RESULT = new SimpleConstraintMatch(t, s); :}
+			;
+
+pattern		::= STRING:s	{: RESULT = s; :};
+
+
+operation  ::= TAG:t ASSIGN STRING:s
+				{: RESULT = new Assignment(t, s); :}
+			|	TAG:t ASSIGN format:f taglist:tl
+				{: RESULT = new Assignment(t, f, tl); :}
+			|	TAG:t ASSIGN TAG:tr
+				{: RESULT = new Assignment(t, tr); :}
+			| TAG:t ASSIGN NEW LABEL:l
+				{: RESULT = parser.makeNewAssignment(t, l); :}
+			|	DELETE TAG:t
+				{: RESULT = new Deletion(t); :}
+			| 	ECHO
+				{: RESULT = new Echo(null, null); :}
+			|	ECHO taglist:tl
+				{: RESULT = new Echo(null, tl); :}
+			|	ECHO format:f taglist:tl
+				{: RESULT = new Echo(f, tl); :}
+			| 	ECHO STRING:s
+				{: RESULT = new Echo(s, null); :}
+			;
+
+format		::= STRING:s	{: RESULT = s; :};
+		
+taglist		::= TAG:t
+				{:	List<Integer> tl = new LinkedList<Integer>();
+					tl.add(t);
+					RESULT = tl;
+				:}	
+			|	taglist:tl ARGSEP TAG:t
+				{:	List<Integer> tln = new LinkedList<Integer>(tl);
+					tln.add(t);
+					RESULT = tln;
+				:}
+			|	error STATEMENT_END
+			;
+			
