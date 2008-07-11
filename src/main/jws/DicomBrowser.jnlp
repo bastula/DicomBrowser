@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- JNLP File for DicomBrowser -->
+<jnlp spec="1.0+"
+	codebase="http://nrg.wustl.edu/projects/DICOM/">
+		<information>
+		<title>DicomBrowser</title>
+		<vendor>Washington University Neuroinformatics Research Group</vendor>
+		<description>Browser and editor for DICOM data sets</description>
+		<offline-allowed/>
+	</information>
+	<resources>
+		<jar href="DicomBrowser-1.0.jar"/>
+		<j2se version="1.5+" max-heap-size="512m"
+			href="http://java.sun.com/products/autodl/j2se"/>
+		<!-- properties for MacOS -->
+		<property name="com.apple.mrj.application.apple.menu.about.name" value="DicomBrowser"/>
+		<property name="apple.laf.useScreenMenuBar" value="true"/>
+		<property name="apple.awt.window.position.forceSafeCreation" value="true"/>
+	</resources>
+	<application-desc main-class="org.nrg.dcm.browse.DicomBrowser"/>
+	<security><all-permissions></security>
+</jnlp>

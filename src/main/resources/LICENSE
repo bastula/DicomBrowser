@@ -1,0 +1,273 @@
+DicomBrowser is developed by the Neuroinformatics Research Group and
+copyrighted by the Washington University School of Medicine.  Source
+code is available at http://nrg.wustl.edu/viewvc/
+
+DicomBrowser Software License Agreement
+
+Copyright (c) 2006-2008 Washington University School of Medicine
+All Rights Reserved
+
+This license is between the user (you) and the copyright holders.
+
+The license granted in this Agreement includes without limitation the
+right to (i) incorporate the software ("DicomBrowser") into other
+proprietary programs (subject to any restrictions applicable to such
+programs), (ii) add your own copyright statement to your modifications
+of the software, and (iii) provide additional or different license
+terms and conditions in your sublicenses of modifications of the
+software; provided that your use, reproduction and distribution of
+such modifications otherwise complies with the conditions stated in
+this Agreement.
+
+Redistribution and use, with or without modification, must retain the
+author's(s') copyright notice(s) as documented in the source
+code. Redistributions in binary code must reproduce the author's(s')
+copyright notice(s) as documented in the source code. This list of
+conditions, the disclaimer in the documentation and/or other materials
+provided with the distribution must also be retained or reproduced.
+
+None of the names, logos, or trademarks of Washington University, any
+Licensor or any of Licensor's affiliates or any of the Contributors
+may be used to endorse or promote products produced in whole or in
+part by operation of the software or derived from or based on the
+software without specific prior written permission from the applicable
+party.
+
+The acknowledgment "This product includes DicomBrowser, developed by
+the Neuroinformatics Research Group at Washington University School of
+Medicine" shall apply to all copies of complete or substantial
+portions of the software, including without limitation all source and
+executable forms, and on any user documentation.
+
+The software has been designed for research purposes only and has not
+been approved for clinical use. It has not been reviewed or approved
+by the Food and Drug Administration or by any other agency. You
+acknowledge and agree that clinical applications are neither
+recommended nor advised.
+
+You are responsible for purchasing any external software that may be
+required for the proper running of this software. You also agree that
+you are solely responsible for informing your sublicensees, including
+without limitation your end-users, of their obligations to secure any
+such required permissions. You further agree that you are solely
+responsible for determining and divulging the viral nature of any code
+included in the software.
+
+We request that you acknowledge the support of DicomBrowser in
+publications that utilize the software such as by "This product
+includes DicomBrowser, developed by the Neuroinformatics Research
+Group at Washington University School of Medicine" and/or by direct
+citation.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE, AND NON-INFRINGEMENT, ARE DISCLAIMED. IN NO
+EVENT SHALL THE COPYRIGHT OWNERS OR CONTRIBUTORS BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. ANY USE, REPRODUCTION OR
+DISTRIBUTION OF THE SOFTWARE WHICH IS NOT IN ACCORDANCE WITH THIS
+AGREEMENT SHALL AUTOMATICALLY REVOKE ALL RIGHTS GRANTED TO YOU UNDER
+THIS AGREEMENT AND RENDER THIS AGREEMENT NULL AND VOID.  THIS
+AGREEMENT DOES NOT GRANT ANY RIGHTS IN OR TO ANY INTELLECTUAL PROPERTY
+OWNED BY LICENSOR OR ANY CONTRIBUTOR EXCEPT THOSE RIGHTS EXPRESSLY
+GRANTED HEREUNDER.
+
+------------------------------------------------------------------------
+
+DicomBrowser uses an assortment of libraries under various licenses,
+including:
+
+--------------------------------
+dcm4che (http://www.dcm4che.org)
+--------------------------------
+
+dcm4che is licensed under the Mozilla Public License Version 1.1
+(the "License"); you may obtain a copy of the License at
+http://www.mozilla.org/MPL
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+for the specific language governing rights and limitations under the
+License.
+
+
+---------------------------
+HSQLDB (http://hssqldb.org)
+---------------------------
+
+Copyright (c) 1995-2000 by the Hypersonic SQL Group.  All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+Neither the name of the Hypersonic SQL Group nor the names of its
+contributors may be used to endorse or promote products derived from this
+software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE HYPERSONIC SQL GROUP,
+OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+This software consists of voluntary contributions made by many individuals on
+behalf of the Hypersonic SQL Group.
+
+
+----------------------------
+dom4j (http://www.dom4j.org)
+----------------------------
+
+Redistribution and use of this software and associated documentation
+("Software"), with or without modification, are permitted provided that the
+following conditions are met:
+
+   1. Redistributions of source code must retain copyright statements and
+      notices. Redistributions must also contain a copy of this document.
+   2. Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+   3. The name "DOM4J" must not be used to endorse or promote products
+      derived from this Software without prior written permission of
+      MetaStuff, Ltd. For written permission, please contact
+      dom4j-info@metastuff.com.
+   4. Products derived from this Software may not be called "DOM4J" nor
+      may "DOM4J" appear in their names without prior written permission of
+      MetaStuff, Ltd. DOM4J is a registered trademark of MetaStuff, Ltd.
+   5. Due credit should be given to the DOM4J Project - http://www.dom4j.org
+
+THIS SOFTWARE IS PROVIDED BY METASTUFF, LTD. AND CONTRIBUTORS ``AS IS'' AND
+ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL METASTUFF, LTD. OR ITS CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+Copyright 2001-2005 (C) MetaStuff, Ltd. All Rights Reserved. 
+
+
+-----------------------------------
+ImageJ (http://rsb.info.nih.gov/ij)
+-----------------------------------
+
+By Wayne Rasband <wsr@nih.gov>
+ImageJ is in the public domain.
+
+
+----------------------------
+slf4j (http://www.slf4j.org)
+----------------------------
+
+Copyright (c) 2004-2007 QOS.ch
+All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to
+deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions: The above copyright
+notice and this permission notice shall be included in all copies or
+substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS",
+WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
+THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+
+
+----------------------------------------------------------------
+log4j                    (http://logging.apache.org)
+Jakarta Commons:
+   BeanUtils             (http://commons.apache.org/beanutils)
+   CLI                   (http://commons.apache.org/cli)
+   Collections           (http://commons.apache.org/collections)
+   Lang                  (http://commons.apache.org/lang)
+   Logging               (http://commons.apache.org/logging)
+EZMorph                  (http://ezmorph.sourceforge.net)
+json-lib                 (http://json-lib.sourceforge.net)
+Xerces									 (http://xerces.apache.org/xerces-j)
+----------------------------------------------------------------
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+implied. See the License for the specific language governing
+permissions and limitations under the License. 
+
+
+--------------------------------------------------------------
+CUP                      (http://www2.cs.tum.edu/projects/cup)
+--------------------------------------------------------------
+
+CUP Parser Generator Copyright Notice, License, and Disclaimer
+Copyright 1996-1999 by Scott Hudson, Frank Flannery, C. Scott Ananian
+
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
+provided that the above copyright notice appear in all copies and that
+both the copyright notice and this permission notice and warranty
+disclaimer appear in supporting documentation, and that the names of the
+authors or their employers not be used in advertising or publicity
+pertaining to distribution of the software without specific, written
+prior permission.
+
+The authors and their employers disclaim all warranties with regard to this
+software, including all implied warranties of merchantability and fitness.
+In no event shall the authors or their employers be liable for any special,
+indirect or consequential damages or any damages whatsoever resulting from
+loss of use, data or profits, whether in an action of contract, negligence
+or other tortious action, arising out of or in connection with the use or
+performance of this software. 
+
+
+--------------------------------------------------------
+OstermillerUtils					(http://ostermiller.org/utils)
+--------------------------------------------------------
+
+OstermillerUtil Java Utilities
+Copyright (c) 2001-2007 by Stephen Ostermiller and other contributors
+
+The OstermillerUtils library is free software; you can redistribute it
+and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the License
+or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+more details.
+
+The GNU General Public License is available here:
+  http://www.gnu.org/copyleft/gpl.html
