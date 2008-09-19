@@ -14,6 +14,8 @@ import javax.swing.JDialog;
 import java.awt.GridBagLayout;
 import javax.swing.JLabel;
 import java.awt.GridBagConstraints;
+
+import javax.swing.JCheckBox;
 import javax.swing.SwingConstants;
 import javax.swing.JComboBox;
 import javax.swing.JButton;
@@ -61,6 +63,10 @@ final class CStoreDialog extends JDialog implements ActionListener {
   private JLabel jLabel = null;
 
   private JComboBox portComboBox = null;
+  
+  private JLabel tlsLabel = null;
+  
+  private JCheckBox useTLSCheckBox = null;
   
   private static final class AEAddr {
     final String host;
@@ -205,6 +211,11 @@ final class CStoreDialog extends JDialog implements ActionListener {
    */
   private JPanel getJContentPane() {
     if (jContentPane == null) {
+    	GridBagConstraints gridBagConstraints11 = new GridBagConstraints();
+    	// TODO: set up constraints
+    	GridBagConstraints gridBagConstraints10 = new GridBagConstraints();
+    	// TODO: set up constraints
+    	
       GridBagConstraints gridBagConstraints9 = new GridBagConstraints();
       gridBagConstraints9.gridx = 1;
       gridBagConstraints9.gridy = 1;
@@ -258,17 +269,26 @@ final class CStoreDialog extends JDialog implements ActionListener {
       gridBagConstraints1.insets = new Insets(20, 31, 12, 9);
       gridBagConstraints1.gridy = 0;
       gridBagConstraints1.gridx = 0;
+
       jLabel = new JLabel();
       jLabel.setHorizontalAlignment(SwingConstants.RIGHT);
       jLabel.setText("Port:");
+ 
       aeLabel = new JLabel();
       aeLabel.setText("AE title:");
       aeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
       aeLabel.setHorizontalTextPosition(SwingConstants.RIGHT);
+
       hostLabel = new JLabel();
       hostLabel.setText("Remote host:");
       hostLabel.setHorizontalTextPosition(SwingConstants.RIGHT);
       hostLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+
+      tlsLabel = new JLabel();
+      tlsLabel.setText("Use secure connection:");
+      tlsLabel.setHorizontalTextPosition(SwingConstants.RIGHT);
+      tlsLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+      
       jContentPane = new JPanel();
       jContentPane.setLayout(new GridBagLayout());
       jContentPane.add(hostLabel, gridBagConstraints1);
@@ -280,6 +300,8 @@ final class CStoreDialog extends JDialog implements ActionListener {
       jContentPane.add(getAeComboBox(), gridBagConstraints7);
       jContentPane.add(jLabel, gridBagConstraints8);
       jContentPane.add(getPortComboBox(), gridBagConstraints9);
+      jContentPane.add(tlsLabel, gridBagConstraints10);
+      jContentPane.add(getUseTLSCheckBox(), gridBagConstraints11);
     }
     return jContentPane;
   }
@@ -394,6 +416,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
     model.send((String)hostComboBox.getSelectedItem(),
         (String)portComboBox.getSelectedItem(),
         (String)aeComboBox.getSelectedItem(),
+        useTLSCheckBox.isSelected(),
         whichFiles.getSelectedIndex() == ALL_FILES_INDEX);
     wc.unregister(this);
   }
@@ -411,4 +434,12 @@ final class CStoreDialog extends JDialog implements ActionListener {
     }
     return portComboBox;
   }
+  
+  private JCheckBox getUseTLSCheckBox() {
+  	if (null == useTLSCheckBox) {
+  		useTLSCheckBox = new JCheckBox();
+  	}
+  	return useTLSCheckBox;
+  }
+
 }  //  @jve:decl-index=0:visual-constraint="10,10"
