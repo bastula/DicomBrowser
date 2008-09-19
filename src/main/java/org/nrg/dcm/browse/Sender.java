@@ -11,7 +11,6 @@ import java.util.Collection;
 import javax.swing.ProgressMonitor;
 
 import org.dcm4che2.data.DicomObject;
-import org.dcm4che2.net.ConfigurationException;
 import org.dcm4che2.net.NetworkApplicationEntity;
 import org.dcm4che2.net.NetworkApplicationEntityBuilder;
 import org.dcm4che2.net.NetworkConnection;
@@ -30,22 +29,34 @@ final class Sender extends Exporter {
 	private DicomSender sender;
 
 
-	Sender(final String host, final String port, final String aeTitle,
+	Sender(final String host, final String port, final boolean isTLS, final String aeTitle,
 			final TransferCapability[] tcs, final Collection<File> files,
-			final Statement statements, final ProgressMonitor pm)
-			throws IOException,ConfigurationException,InterruptedException {
+			final Statement statements, final ProgressMonitor pm) {
 		super(statements, files);
+		
+		final NetworkConnection nc;
+		if (isTLS) {
+			nc = new NetworkConnectionBuilder()
+				.setTls(NetworkConnectionBuilder.TlsType.AES)
+				.setTlsNeedClientAuth(false)
+				.build();
+		} else {
+			nc = new NetworkConnection();
+		}
+
 		final NetworkApplicationEntity localAE = new NetworkApplicationEntityBuilder()
 			.setAETitle(aeTitle)
 			.setTransferCapability(tcs)
-			.setNetworkConnection(new NetworkConnection())
+			.setNetworkConnection(nc)
 			.build();
+		
 		final NetworkApplicationEntity remoteAE = new NetworkApplicationEntityBuilder()
 			.setNetworkConnection(new NetworkConnectionBuilder()
 				.setHostname(host)
 				.setPort(Integer.parseInt(port))
 				.build())
 			.build();
+		
 		this.sender = new DicomSender(localAE, remoteAE);
 
 		this.pm = pm;
