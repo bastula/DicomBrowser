@@ -30,5 +30,7 @@
 	<classpathentry kind="var" path="M2_REPO/org/dcm4che/dcm4che-net/2.0.15/dcm4che-net-2.0.15.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/ostermiller/ostermillerutils/1.07/ostermillerutils-1.07.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/DicomUtils"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/DicomDB"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/ExtAttr"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
