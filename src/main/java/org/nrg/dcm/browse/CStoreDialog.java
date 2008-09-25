@@ -60,7 +60,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
  
   private FileSetTableModel model;
 
-  private JLabel jLabel = null;
+  private JLabel portLabel = null;
 
   private JComboBox portComboBox = null;
   
@@ -211,11 +211,20 @@ final class CStoreDialog extends JDialog implements ActionListener {
    */
   private JPanel getJContentPane() {
     if (jContentPane == null) {
+    	// TLS checkbox
     	GridBagConstraints gridBagConstraints11 = new GridBagConstraints();
-    	// TODO: set up constraints
+    	gridBagConstraints11.gridx = 3;
+    	gridBagConstraints11.gridy = 2;
+    	gridBagConstraints11.anchor = GridBagConstraints.LINE_START;
+     	
+    	// "Use secure connection (TLS):" label
     	GridBagConstraints gridBagConstraints10 = new GridBagConstraints();
-    	// TODO: set up constraints
+    	gridBagConstraints10.gridwidth = 3;
+    	gridBagConstraints10.gridx = 0;
+    	gridBagConstraints10.gridy = 2; 
+    	gridBagConstraints10.anchor = GridBagConstraints.LINE_END;
     	
+    	// Port combo box
       GridBagConstraints gridBagConstraints9 = new GridBagConstraints();
       gridBagConstraints9.gridx = 1;
       gridBagConstraints9.gridy = 1;
@@ -223,17 +232,26 @@ final class CStoreDialog extends JDialog implements ActionListener {
       gridBagConstraints9.ipady = -1;
       gridBagConstraints9.weightx = 1.0;
       gridBagConstraints9.insets = new Insets(8, 9, 7, 6);
+      gridBagConstraints9.anchor = GridBagConstraints.LINE_START;
+
+      // "Port:" label
       GridBagConstraints gridBagConstraints8 = new GridBagConstraints();
       gridBagConstraints8.insets = new Insets(12, 60, 12, 9);
       gridBagConstraints8.gridy = 1;
       gridBagConstraints8.ipadx = 19;
       gridBagConstraints8.gridx = 0;
+      gridBagConstraints8.anchor = GridBagConstraints.LINE_END;
+      
+      // AE title combo box
       GridBagConstraints gridBagConstraints7 = new GridBagConstraints();
       gridBagConstraints7.gridx = 3;
       gridBagConstraints7.gridy = 1;
       gridBagConstraints7.ipadx = -39;
       gridBagConstraints7.weightx = 1.0;
       gridBagConstraints7.insets = new Insets(8, 3, 7, 11);
+      gridBagConstraints7.anchor = GridBagConstraints.LINE_START;
+      
+      // Host combo box
       GridBagConstraints gridBagConstraints6 = new GridBagConstraints();
       gridBagConstraints6.gridwidth = 3;
       gridBagConstraints6.gridx = 1;
@@ -242,37 +260,50 @@ final class CStoreDialog extends JDialog implements ActionListener {
       gridBagConstraints6.ipady = -1;
       gridBagConstraints6.weightx = 1.0;
       gridBagConstraints6.insets = new Insets(15, 10, 8, 11);
+      gridBagConstraints6.anchor = GridBagConstraints.LINE_START;
+      
+      // Cancel button
       GridBagConstraints gridBagConstraints5 = new GridBagConstraints();
       gridBagConstraints5.insets = new Insets(7, 6, 19, 11);
-      gridBagConstraints5.gridy = 2;
+      gridBagConstraints5.gridy = 3;
       gridBagConstraints5.ipadx = 1;
       gridBagConstraints5.gridx = 3;
+      
+      // Send button
       GridBagConstraints gridBagConstraints4 = new GridBagConstraints();
       gridBagConstraints4.insets = new Insets(7, 7, 19, 3);
-      gridBagConstraints4.gridy = 2;
+      gridBagConstraints4.gridy = 3;
       gridBagConstraints4.ipadx = 10;
       gridBagConstraints4.gridx = 2;
+      
+      // Send which files selector
       GridBagConstraints gridBagConstraints3 = new GridBagConstraints();
       gridBagConstraints3.gridwidth = 2;
       gridBagConstraints3.gridx = 0;
-      gridBagConstraints3.gridy = 2;
+      gridBagConstraints3.gridy = 3;
       gridBagConstraints3.ipadx = -6;
       gridBagConstraints3.ipady = 1;
       gridBagConstraints3.weightx = 1.0;
       gridBagConstraints3.insets = new Insets(7, 28, 19, 6);
-      GridBagConstraints gridBagConstraints2 = new GridBagConstraints();
+
+      // "AE title:" label
+      GridBagConstraints gridBagConstraints2 = new GridBagConstraints();     
       gridBagConstraints2.insets = new Insets(12, 18, 12, 8);
       gridBagConstraints2.gridy = 1;
       gridBagConstraints2.ipadx = 15;
       gridBagConstraints2.gridx = 2;
+      gridBagConstraints2.anchor = GridBagConstraints.LINE_END;
+      
+      // "Remote host:" label
       GridBagConstraints gridBagConstraints1 = new GridBagConstraints();
       gridBagConstraints1.insets = new Insets(20, 31, 12, 9);
       gridBagConstraints1.gridy = 0;
       gridBagConstraints1.gridx = 0;
+      gridBagConstraints1.anchor = GridBagConstraints.LINE_END;
 
-      jLabel = new JLabel();
-      jLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-      jLabel.setText("Port:");
+      portLabel = new JLabel();
+      portLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+      portLabel.setText("Port:");
  
       aeLabel = new JLabel();
       aeLabel.setText("AE title:");
@@ -285,7 +316,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
       hostLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
       tlsLabel = new JLabel();
-      tlsLabel.setText("Use secure connection:");
+      tlsLabel.setText("Use secure connection (TLS):");
       tlsLabel.setHorizontalTextPosition(SwingConstants.RIGHT);
       tlsLabel.setHorizontalAlignment(SwingConstants.RIGHT);
       
@@ -298,7 +329,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
       jContentPane.add(getCancelButton(), gridBagConstraints5);
       jContentPane.add(getHostComboBox(), gridBagConstraints6);
       jContentPane.add(getAeComboBox(), gridBagConstraints7);
-      jContentPane.add(jLabel, gridBagConstraints8);
+      jContentPane.add(portLabel, gridBagConstraints8);
       jContentPane.add(getPortComboBox(), gridBagConstraints9);
       jContentPane.add(tlsLabel, gridBagConstraints10);
       jContentPane.add(getUseTLSCheckBox(), gridBagConstraints11);

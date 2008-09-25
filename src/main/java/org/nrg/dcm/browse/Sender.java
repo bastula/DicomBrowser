@@ -30,8 +30,8 @@ final class Sender extends Exporter {
 	private static final String MAKE_CONN_MSG = "Making network connection";
 	private static final String AE_TITLE = "DicomBrowser";
 	private static final String PROTOCOL_TLS = "TLS";
-//	private static final String BAD_CONN_MSG = "Unable to make network connection: %1$s";
 
+	
 	/**
 	 * Why do you always have to be so suspicious?
 	 */
