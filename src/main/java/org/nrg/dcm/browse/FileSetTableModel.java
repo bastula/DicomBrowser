@@ -1,6 +1,5 @@
 /**
- * $Id: FileSetTableModel.java,v 1.7 2008/04/02 19:45:26 karchie Exp $
- * Copyright (c) 2006 Washington University
+ * Copyright (c) 2006-2009 Washington University
  */
 package org.nrg.dcm.browse;
 
@@ -501,11 +500,13 @@ implements TreeSelectionListener {
 
 		for (final File file : onlySelected ? selectedFiles : fs.getDataFiles()) {
 			try {
-				for (final Operation op : s.getOperations(file)) {
-					if (!ops.containsKey(op))
-						ops.put(op, new HashSet<File>());
-					replaced.put(op.getTag(), addOperation(op, file));
-					ops.get(op).add(file);
+			    for (final Object opo : s.getOperations(file)) {
+			      final Operation op = (Operation)opo;
+			      if (!ops.containsKey(op)) {
+			        ops.put(op, new HashSet<File>());
+			      }
+			      replaced.put(op.getTag(), addOperation(op, file));
+			      ops.get(op).add(file);
 				}
 			} catch (IOException e) { // TODO: localize
 				JOptionPane.showMessageDialog(browser.getFrame(),

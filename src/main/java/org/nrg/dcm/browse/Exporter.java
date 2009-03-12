@@ -53,15 +53,12 @@ abstract class Exporter implements Runnable {
     private static final long serialVersionUID = 1L;
   }
 
-  @SuppressWarnings("unused")
   void prepare(File f) throws IOException,CancelException {}
 
-  @SuppressWarnings("unused")
   void open() throws IOException {}
 
   abstract void process(File f, DicomObject o) throws IOException,CancelException;
 
-  @SuppressWarnings("unused")
   void close() throws IOException {}
 
   final DicomObject read(final File f) throws IOException {
@@ -83,12 +80,13 @@ abstract class Exporter implements Runnable {
     return o;
   }
 
+  @SuppressWarnings("unchecked")
   final private DicomObject apply(final File f) throws IOException {
     final DicomObject o = read(f);
     final Collection<Action> actions = new LinkedList<Action>();
     for (final Statement s : ss) {
       try {
-	actions.addAll(s.getActions(f, o));
+        actions.addAll(s.getActions(f, o));
       } catch (AttributeException e) {
 	assert false : "Caught AttributeException when only file constraints are used";
       return null;

@@ -190,7 +190,7 @@ public final class CSVRemapper {
   private final PrintStream messages = System.err;
 
   public CSVRemapper(final File configFile, final String uidRoot, final URL uidRootServer)
-  throws IOException,ParseException,DocumentException,InvalidCSVException,UIDGenerator.InvalidUIDRootException {
+  throws IOException,ParseException,DocumentException,InvalidCSVException,InvalidUIDRootException {
     this.uidGenerator = new UIDGenerator(DicomBrowser.prefs, DicomBrowser.UID_ROOT_PREF, uidRoot, uidRootServer);
     
     final ConfigurableDirectoryRecordFactory factory = new ConfigurableDirectoryRecordFactory(configFile);
@@ -338,7 +338,7 @@ public final class CSVRemapper {
     try {
       final EditDCMLex scanner = new EditDCMLex(in);
       final EditDCMCup parser = new EditDCMCup(scanner);
-      parser.setGenerator(scanner.getLabel("UID"), uidGenerator);
+      parser.setGenerator("UID", uidGenerator);
       final Symbol root = parser.parse();
       globalStatements.add((Statement)root.value);
     } catch (IOException e) {

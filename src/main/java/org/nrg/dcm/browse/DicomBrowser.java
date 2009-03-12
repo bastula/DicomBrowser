@@ -1,6 +1,5 @@
 /**
- * $Id: DicomBrowser.java,v 1.10 2008/03/25 22:04:18 karchie Exp $
- * Copyright (c) 2006,2007 Washington University
+ * Copyright (c) 2006-2009 Washington University
  */
 package org.nrg.dcm.browse;
 
@@ -559,7 +558,7 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
 	final FileInputStream fin = new FileInputStream(fc.getSelectedFile());
     final EditDCMLex scanner = new EditDCMLex(fin);
     final EditDCMCup parser = new EditDCMCup(scanner);
-    parser.setGenerator(scanner.getLabel("UID"), new UIDGenerator(prefs, UID_ROOT_PREF));
+    parser.setGenerator("UID", new UIDGenerator(prefs, UID_ROOT_PREF));
 	root = parser.parse();
 	fin.close();
       } catch (Exception e) {

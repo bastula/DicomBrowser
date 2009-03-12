@@ -27,7 +27,6 @@ final class AboutDialog extends JDialog {
   final static private int SPACE = 8;
   final static String TITLE;
   final static String VERSION;
-  final static String BUILD;
   static {
 	  final Properties props = new Properties();
 	  final ClassLoader cl = AboutDialog.class.getClassLoader();
@@ -37,8 +36,7 @@ final class AboutDialog extends JDialog {
 		  System.err.println("Unable to load properties: " + e.getMessage());
 	  }
 	  TITLE = props.getProperty("application.name");
-	  VERSION = props.getProperty("application.version");
-	  BUILD = props.getProperty("build.id");
+	  VERSION = props.getProperty("application.version") + " " + "($Rev$)";
   }
 
   AboutDialog(final Frame owner, final String title) {
@@ -62,12 +60,7 @@ final class AboutDialog extends JDialog {
     version.setAlignmentX(Component.CENTER_ALIGNMENT);
     add(version);
     
-    final JLabel build = new JLabel("build " + BUILD);
-    build.setBorder(margin);
-    build.setAlignmentX(Component.CENTER_ALIGNMENT);
-    add(build);
-    
-    final JLabel wucopy = new JLabel("Copyright \u00A9 2006-2008 Washington University");
+    final JLabel wucopy = new JLabel("Copyright \u00A9 2006-2009 Washington University");
     wucopy.setBorder(margin);
     wucopy.setAlignmentX(Component.CENTER_ALIGNMENT);
     add(wucopy);
