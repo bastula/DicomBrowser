@@ -116,7 +116,6 @@ public class CSVSummaryBuilder {
   /**
    * @param args
    */
-  @SuppressWarnings("static-access")
   public static void main(String[] args) throws Exception {
     final Options options = new Options();
     options.addOption("h", "help", false, "show this information");

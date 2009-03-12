@@ -1,6 +1,5 @@
 /**
- * $Id: Command.java,v 1.2 2007/08/22 17:49:45 karchie Exp $
- * Copyright (c) 2006 Washington University
+ * Copyright (c) 2006-2009 Washington University
  */
 package org.nrg.dcm.browse;
 
@@ -13,6 +12,7 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
 
+import org.nrg.StringUtils;
 import org.nrg.dcm.Utils;
 import org.nrg.dcm.edit.Operation;
 
@@ -32,9 +32,9 @@ final class Command {
   private final Operation ops[];
   private final File[][] files;
   private final Map<Integer,Map<File,Operation>> replaced;
-  
+
   private final String MULT_OP_FORMAT = " (%1$d attributes)";   // TODO: localize
-  
+
   // One operation on a set of files
   Command(Operation op, Collection<File> files, Map<File,Operation> replaced) {
     this.ops = new Operation[]{op};
@@ -43,7 +43,7 @@ final class Command {
     this.replaced = new HashMap<Integer,Map<File,Operation>>();
     this.replaced.put(op.getTag(), new HashMap<File,Operation>(replaced));
   }
-  
+
   // Multiple operations on the same set of files
   Command(Operation[] ops, Collection<File> files, Map<Integer,Map<File,Operation>> replaced) {
     this.ops = new Operation[ops.length];
@@ -54,7 +54,7 @@ final class Command {
       this.files[i] = filesArray;
     this.replaced = new HashMap<Integer,Map<File,Operation>>(replaced);
   }
-  
+
   // Multiple operations, each on its own file set
   Command(Map<Operation,Set<File>> ops, Map<Integer,Map<File,Operation>> replaced) {
     this.ops = ops.keySet().toArray(new Operation[0]);
@@ -64,18 +64,18 @@ final class Command {
     }
     this.replaced = new HashMap<Integer,Map<File,Operation>>(replaced);
   }
-  
+
   @Override
   public String toString() {
     final Map<String,Collection<String>> opdescs = new LinkedHashMap<String,Collection<String>>();
     for (final Operation op : ops) {
       final String name = op.getName();
       if (!opdescs.containsKey(name)) {
-	opdescs.put(name, new HashSet<String>());
+        opdescs.put(name, new HashSet<String>());
       }
       opdescs.get(name).add(op.toString());
     }
-    return Utils.join(
+    return StringUtils.join(
         new Utils.Mapper<String,String>(opdescs.keySet()) {
           @Override
           protected String of(final String name) {
@@ -93,27 +93,27 @@ final class Command {
           }
         }.map(), ", ");
   }
-  
+
   Operation[] getOperations() {
     final Operation[] copy = new Operation[ops.length];
     System.arraycopy(ops, 0, copy, 0, ops.length);
     return copy;
   }
-  
+
   File[] getFiles(final int opIndex) {
     final File[] copy = new File[files[opIndex].length];
     System.arraycopy(files[opIndex], 0, copy, 0, files[opIndex].length);
     return copy;
   }
-  
+
   Collection<File> getAllFiles() {
     final Set<File> outfiles = new HashSet<File>();
     for (int i = 0; i < files.length; i++)
       outfiles.addAll(Arrays.asList(files[i]));
     return outfiles;
   }
-  
-  
+
+
   /**
    * @return a reference to the Command's own instance (not a copy)
    */
