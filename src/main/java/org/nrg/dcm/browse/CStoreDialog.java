@@ -1,6 +1,5 @@
 /**
- * $Id: CStoreDialog.java,v 1.2 2007/03/01 21:57:32 karchie Exp $
- * Copyright (c) 2006 Washington University
+ * Copyright (c) 2006-2009 Washington University
  */
 package org.nrg.dcm.browse;
 
@@ -32,14 +31,14 @@ import java.awt.Dimension;
  */
 final class CStoreDialog extends JDialog implements ActionListener {
   private static final long serialVersionUID = 1L;
-  
+
   private final static String TITLE = "Send files to DICOM receiver";  // TODO: localize
   private final static String SEND_BUTTON = "Send";            // TODO: localize
   private final static String CANCEL_BUTTON = "Cancel";        // TODO: localize
   private final static String[] whichOpts = {"Send all files", "Send only selected files"};     // TODO: localize
-  
+
   private final static String AE_HISTORY = "AE-history";  //  @jve:decl-index=0:
-  
+
   private final static int ALL_FILES_INDEX = 0;
 
   private JPanel jContentPane = null;
@@ -57,45 +56,46 @@ final class CStoreDialog extends JDialog implements ActionListener {
   private JComboBox hostComboBox = null;
 
   private JComboBox aeComboBox = null;
- 
+
   private FileSetTableModel model;
 
   private JLabel portLabel = null;
 
   private JComboBox portComboBox = null;
-  
+
   private JLabel tlsLabel = null;
-  
+
   private JCheckBox useTLSCheckBox = null;
-  
+
+
   private static final class AEAddr {
     final String host;
     final int port;
     final String title;
-    
+
     public AEAddr(final String host, final int port, final String title) {
       this.host = host;
       this.port = port;
       this.title = title;
     }
-    
+
     public AEAddr(final String desc) {
       final String[] broken = desc.split(":");
       this.host = broken[0];
       this.port = Integer.parseInt(broken[1]);
       this.title = broken[2];
     }
-    
+
     @Override
     public String toString() {
       return String.format("%1$s:%2$d:%3$s", host, port, title);
     }
-    
+
     @Override
     public int hashCode() {
       return 17 + host.hashCode() + port + title.hashCode();
     }
-    
+
     @Override
     public boolean equals(final Object o) {
       if (!(o instanceof AEAddr)) return false;
@@ -103,11 +103,11 @@ final class CStoreDialog extends JDialog implements ActionListener {
       return host.equals(a.host) && port == a.port && title.equals(a.title);
     }
   }
-  
+
   private static final class AEHistory extends Stack<AEAddr> {
     private static final long serialVersionUID = 1L;
     private static final String SEPARATOR = ",";
-    
+
     AEHistory(final String hs) {
       super();
       if (hs != null) {
@@ -116,7 +116,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
           push(new AEAddr(h[i]));
       }
     }
-    
+
     AEAddr matchHost(final String host) {
       for (final AEAddr a : this) {
         if (a.host.equals(host))
@@ -124,7 +124,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
       }
       return null;
     }
-    
+
     AEAddr matchTitle(final String title) {
       for (final AEAddr a : this) {
         if (a.title.equals(title))
@@ -132,7 +132,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
       }
       return null;
     }
-    
+
     String[] getHosts() {
       final List<String> hosts = new LinkedList<String>();
       for (final AEAddr a : this)
@@ -140,7 +140,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
           hosts.add(a.host);
       return hosts.toArray(new String[0]);
     }
-    
+
     String[] getPorts() {
       final List<String> ports = new LinkedList<String>();
       for (final AEAddr a : this) {
@@ -150,7 +150,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
       }
       return ports.toArray(new String[0]);
     }
-    
+
     String[] getTitles() {
       final List<String> aets = new LinkedList<String>();
       for (final AEAddr a : this)
@@ -158,14 +158,14 @@ final class CStoreDialog extends JDialog implements ActionListener {
           aets.add(a.title);
       return aets.toArray(new String[0]);
     }
-    
+
     @Override
     public AEAddr push(AEAddr item) {
       while (this.contains(item))
         this.remove(item);
       return super.push(item);
     }
-    
+
     @Override
     public String toString() {
       final Iterator<AEAddr> ai = iterator();
@@ -177,9 +177,9 @@ final class CStoreDialog extends JDialog implements ActionListener {
       return sb.toString();
     }
   }
-  
+
   private final AEHistory history;
-  
+
   /**
    * @param owner
    */
@@ -211,20 +211,20 @@ final class CStoreDialog extends JDialog implements ActionListener {
    */
   private JPanel getJContentPane() {
     if (jContentPane == null) {
-    	// TLS checkbox
-    	GridBagConstraints gridBagConstraints11 = new GridBagConstraints();
-    	gridBagConstraints11.gridx = 3;
-    	gridBagConstraints11.gridy = 2;
-    	gridBagConstraints11.anchor = GridBagConstraints.LINE_START;
-     	
-    	// "Use secure connection (TLS):" label
-    	GridBagConstraints gridBagConstraints10 = new GridBagConstraints();
-    	gridBagConstraints10.gridwidth = 3;
-    	gridBagConstraints10.gridx = 0;
-    	gridBagConstraints10.gridy = 2; 
-    	gridBagConstraints10.anchor = GridBagConstraints.LINE_END;
-    	
-    	// Port combo box
+      // TLS checkbox
+      GridBagConstraints gridBagConstraints11 = new GridBagConstraints();
+      gridBagConstraints11.gridx = 3;
+      gridBagConstraints11.gridy = 2;
+      gridBagConstraints11.anchor = GridBagConstraints.LINE_START;
+
+      // "Use secure connection (TLS):" label
+      GridBagConstraints gridBagConstraints10 = new GridBagConstraints();
+      gridBagConstraints10.gridwidth = 3;
+      gridBagConstraints10.gridx = 0;
+      gridBagConstraints10.gridy = 2; 
+      gridBagConstraints10.anchor = GridBagConstraints.LINE_END;
+
+      // Port combo box
       GridBagConstraints gridBagConstraints9 = new GridBagConstraints();
       gridBagConstraints9.gridx = 1;
       gridBagConstraints9.gridy = 1;
@@ -241,7 +241,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
       gridBagConstraints8.ipadx = 19;
       gridBagConstraints8.gridx = 0;
       gridBagConstraints8.anchor = GridBagConstraints.LINE_END;
-      
+
       // AE title combo box
       GridBagConstraints gridBagConstraints7 = new GridBagConstraints();
       gridBagConstraints7.gridx = 3;
@@ -250,7 +250,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
       gridBagConstraints7.weightx = 1.0;
       gridBagConstraints7.insets = new Insets(8, 3, 7, 11);
       gridBagConstraints7.anchor = GridBagConstraints.LINE_START;
-      
+
       // Host combo box
       GridBagConstraints gridBagConstraints6 = new GridBagConstraints();
       gridBagConstraints6.gridwidth = 3;
@@ -261,21 +261,21 @@ final class CStoreDialog extends JDialog implements ActionListener {
       gridBagConstraints6.weightx = 1.0;
       gridBagConstraints6.insets = new Insets(15, 10, 8, 11);
       gridBagConstraints6.anchor = GridBagConstraints.LINE_START;
-      
+
       // Cancel button
       GridBagConstraints gridBagConstraints5 = new GridBagConstraints();
       gridBagConstraints5.insets = new Insets(7, 6, 19, 11);
       gridBagConstraints5.gridy = 3;
       gridBagConstraints5.ipadx = 1;
       gridBagConstraints5.gridx = 3;
-      
+
       // Send button
       GridBagConstraints gridBagConstraints4 = new GridBagConstraints();
       gridBagConstraints4.insets = new Insets(7, 7, 19, 3);
       gridBagConstraints4.gridy = 3;
       gridBagConstraints4.ipadx = 10;
       gridBagConstraints4.gridx = 2;
-      
+
       // Send which files selector
       GridBagConstraints gridBagConstraints3 = new GridBagConstraints();
       gridBagConstraints3.gridwidth = 2;
@@ -293,7 +293,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
       gridBagConstraints2.ipadx = 15;
       gridBagConstraints2.gridx = 2;
       gridBagConstraints2.anchor = GridBagConstraints.LINE_END;
-      
+
       // "Remote host:" label
       GridBagConstraints gridBagConstraints1 = new GridBagConstraints();
       gridBagConstraints1.insets = new Insets(20, 31, 12, 9);
@@ -304,7 +304,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
       portLabel = new JLabel();
       portLabel.setHorizontalAlignment(SwingConstants.RIGHT);
       portLabel.setText("Port:");
- 
+
       aeLabel = new JLabel();
       aeLabel.setText("AE title:");
       aeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -319,7 +319,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
       tlsLabel.setText("Use secure connection (TLS):");
       tlsLabel.setHorizontalTextPosition(SwingConstants.RIGHT);
       tlsLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-      
+
       jContentPane = new JPanel();
       jContentPane.setLayout(new GridBagLayout());
       jContentPane.add(hostLabel, gridBagConstraints1);
@@ -400,13 +400,12 @@ final class CStoreDialog extends JDialog implements ActionListener {
     if (aeComboBox == null) {
       aeComboBox = new JComboBox(history.getTitles());
       aeComboBox.setEditable(true);
-      aeComboBox.addActionListener(this);
       aeComboBox.setMinimumSize(new Dimension(120,0));
     }
     return aeComboBox;
   }
 
-  
+
   public void actionPerformed(ActionEvent e) {
     final Object source = e.getSource();
     if (source == hostComboBox) {
@@ -417,14 +416,6 @@ final class CStoreDialog extends JDialog implements ActionListener {
         aeComboBox.setSelectedItem(a.title);
         aeComboBox.addActionListener(this);
       }
-    } else if (source == aeComboBox) {
-      final AEAddr a = history.matchTitle((String)aeComboBox.getSelectedItem());
-      if (a != null) {
-        hostComboBox.removeActionListener(this);
-        hostComboBox.setSelectedItem(a.host);
-        hostComboBox.addActionListener(this);
-        portComboBox.setSelectedItem(String.valueOf(a.port));
-      }
     } else {
       final String command = e.getActionCommand();
       if (command.equals(SEND_BUTTON)) {
@@ -434,13 +425,14 @@ final class CStoreDialog extends JDialog implements ActionListener {
             (String)aeComboBox.getSelectedItem()));
         DicomBrowser.prefs.put(AE_HISTORY, history.toString());
         doSend();
-      } else if (command.equals(CANCEL_BUTTON))
+      } else if (command.equals(CANCEL_BUTTON)) {
         setVisible(false);        // never mind
-      else
+      } else {
         throw new RuntimeException("Unimplemented action: " + command);
+      }
     }
   }
-  
+
   private void doSend() { 
     final InterfaceCounter wc = InterfaceCounter.getInstance();
     wc.register(this);	// don't exit program until we're done with this send
@@ -465,12 +457,12 @@ final class CStoreDialog extends JDialog implements ActionListener {
     }
     return portComboBox;
   }
-  
+
   private JCheckBox getUseTLSCheckBox() {
-  	if (null == useTLSCheckBox) {
-  		useTLSCheckBox = new JCheckBox();
-  	}
-  	return useTLSCheckBox;
+    if (null == useTLSCheckBox) {
+      useTLSCheckBox = new JCheckBox();
+    }
+    return useTLSCheckBox;
   }
 
 }  //  @jve:decl-index=0:visual-constraint="10,10"
