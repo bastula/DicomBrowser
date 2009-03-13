@@ -1,35 +1,29 @@
 /**
- * $Id: Exporter.java,v 1.7 2008/01/31 21:24:22 karchie Exp $
- * Copyright (c) 2006,2008 Washington University
+ * Copyright (c) 2006,2008-2009 Washington University
  */
 package org.nrg.dcm.browse;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.BufferedInputStream;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.zip.GZIPInputStream;
 
 import javax.swing.JOptionPane;
 
 import org.dcm4che2.data.DicomObject;
 import org.dcm4che2.data.Tag;
 import org.dcm4che2.data.UID;
-import org.dcm4che2.io.DicomInputStream;
 
+import org.nrg.dcm.CStoreException;
 import org.nrg.dcm.edit.Action;
 import org.nrg.dcm.edit.AttributeException;
 import org.nrg.dcm.edit.Statement;
+import org.nrg.dcm.io.DicomFileMapper;
 
 
 abstract class Exporter implements Runnable {
-  private static final String GZIP_SUFFIX = ".gz";
   private static final String IO_SKIP_MSG = "Unable to read %1$s : %2$s; skipping";     // TODO: localize
   private static final String SOCKET_MSG = "Network error: %1$s";
   private static final String ERROR_TITLE = "Export failed";
@@ -43,10 +37,10 @@ abstract class Exporter implements Runnable {
     this.ss = new ArrayList<Statement>(s);
     this.files = new ArrayList<File>(files);
   }
-  
+
   Exporter(final Statement s, final Collection<File> files) {
-    this(new LinkedList<Statement>(), files);
-    if (null != s) { this.ss.add(s); }
+    this(new ArrayList<Statement>(), files);
+    if (null != s) this.ss.add(s);
   }
 
   final class CancelException extends Exception {
@@ -57,44 +51,30 @@ abstract class Exporter implements Runnable {
 
   void open() throws IOException {}
 
-  abstract void process(File f, DicomObject o) throws IOException,CancelException;
+  abstract void process(File f, DicomObject o) throws IOException,CancelException,CStoreException;
 
   void close() throws IOException {}
 
   final DicomObject read(final File f) throws IOException {
-    BufferedInputStream bin = null;
-    final DicomObject o;
-    try {
-      InputStream fin = new FileInputStream(f);
-      if (f.getName().endsWith(GZIP_SUFFIX))
-	fin = new GZIPInputStream(fin);
-      bin = new BufferedInputStream(fin);
-      final DicomInputStream in = new DicomInputStream(bin);
-      o = in.readDicomObject();
-    } finally {
-      // DicomInputStream.close() is inherited from FilterInputStream and simply
-      // does in.in.close(), so nothing leaks if we do in.in (aka fin).close() directly.
-      if (bin != null)
-	bin.close();
-    }
-    return o;
+    return (DicomObject)DicomFileMapper.getInstance().map(f);
   }
 
   @SuppressWarnings("unchecked")
   final private DicomObject apply(final File f) throws IOException {
     final DicomObject o = read(f);
-    final Collection<Action> actions = new LinkedList<Action>();
+    final Collection<Action> actions = new ArrayList<Action>();
     for (final Statement s : ss) {
       try {
         actions.addAll(s.getActions(f, o));
       } catch (AttributeException e) {
-	assert false : "Caught AttributeException when only file constraints are used";
-      return null;
+        throw new RuntimeException("Caught AttributeException when only file constraints are used");
       }
     }
-    if (!actions.isEmpty())
-      for (Action action : actions)
-	action.apply();
+    if (!actions.isEmpty()) {
+      for (final Action action : actions) {
+        action.apply();
+      }
+    }
 
     return o;
   }
@@ -104,80 +84,84 @@ abstract class Exporter implements Runnable {
     ic.register(this);	// don't exit the program until we're done with this task.
     try {
       for (final Iterator<File> fi = files.iterator(); fi.hasNext();) {
-	final File f = fi.next();
-	try {
-	  prepare(f);
-	} catch (SocketException e) {
-	  JOptionPane.showMessageDialog(null,
-	      String.format(SOCKET_MSG, e.getMessage()), ERROR_TITLE, 
-	      JOptionPane.ERROR_MESSAGE);
-	  return;
-	} catch (IOException e) {
-	  JOptionPane.showMessageDialog(null,
-	      String.format(IO_SKIP_MSG, f.getPath(), e.getMessage()), ERROR_TITLE,
-	      JOptionPane.WARNING_MESSAGE);
-	  fi.remove();
-	}
+        final File f = fi.next();
+        try {
+          prepare(f);
+        } catch (SocketException e) {
+          JOptionPane.showMessageDialog(null,
+              String.format(SOCKET_MSG, e.getMessage()), ERROR_TITLE, 
+              JOptionPane.ERROR_MESSAGE);
+          return;
+        } catch (IOException e) {
+          JOptionPane.showMessageDialog(null,
+              String.format(IO_SKIP_MSG, f.getPath(), e.getMessage()), ERROR_TITLE,
+              JOptionPane.WARNING_MESSAGE);
+          fi.remove();
+        }
       }
 
       try {
-	open();
+        open();
       } catch (IOException e) {
-	JOptionPane.showMessageDialog(null,
-	    String.format(FAIL_MSG, e.getMessage()), ERROR_TITLE,
-	    JOptionPane.ERROR_MESSAGE);
-	return;
+        JOptionPane.showMessageDialog(null,
+            String.format(FAIL_MSG, e.getMessage()), ERROR_TITLE,
+            JOptionPane.ERROR_MESSAGE);
+        return;
       }
 
       for (final File f : files) {
-	final DicomObject o;
-	try {
-	  o = apply(f);
-	} catch (SocketException e) {   // no point in continuing with a socket error
-	  JOptionPane.showMessageDialog(null,
-	      String.format(SOCKET_MSG, e.getMessage()), ERROR_TITLE,
-	      JOptionPane.ERROR_MESSAGE);
-	  return;
-	} catch (IOException e) {
-	  final int n = JOptionPane.showOptionDialog(null,
-	      String.format(IO_SKIP_MSG, f.getPath(), e.getMessage()),
-	      ERROR_TITLE,
-	      JOptionPane.YES_NO_OPTION,
-	      JOptionPane.WARNING_MESSAGE,
-	      null,
-	      FAIL_OPTIONS,
-	      FAIL_OPTIONS[0]);
-	  if (n == 0)
-	    continue;	// move on to next file
-	  else
-	    return;	// abort export
-	}
-	try {
-	  process(f, o);
-	} catch (IOException e) {
-	  final int n = JOptionPane.showOptionDialog(null,
-	      String.format(FAIL_MSG, e.getMessage()),
-	      ERROR_TITLE,
-	      JOptionPane.YES_NO_OPTION,
-	      JOptionPane.WARNING_MESSAGE,
-	      null,
-	      FAIL_OPTIONS,
-	      FAIL_OPTIONS[0]);
-	  if (n == 0)
-	    continue;	// move on to next file
-	  else
-	    return;	// abort export
-	}
+        final DicomObject o;
+        try {
+          o = apply(f);
+        } catch (SocketException e) {   // no point in continuing with a socket error
+          JOptionPane.showMessageDialog(null,
+              String.format(SOCKET_MSG, e.getMessage()), ERROR_TITLE,
+              JOptionPane.ERROR_MESSAGE);
+          return;
+        } catch (IOException e) {
+          final int n = JOptionPane.showOptionDialog(null,
+              String.format(IO_SKIP_MSG, f.getPath(), e.getMessage()),
+              ERROR_TITLE,
+              JOptionPane.YES_NO_OPTION,
+              JOptionPane.WARNING_MESSAGE,
+              null,
+              FAIL_OPTIONS,
+              FAIL_OPTIONS[0]);
+          if (0 == n) continue; else return;
+        }
+        try {
+          process(f, o);
+        } catch (IOException e) {
+          final int n = JOptionPane.showOptionDialog(null,
+              String.format(FAIL_MSG, e.getMessage()),
+              ERROR_TITLE,
+              JOptionPane.YES_NO_OPTION,
+              JOptionPane.WARNING_MESSAGE,
+              null,
+              FAIL_OPTIONS,
+              FAIL_OPTIONS[0]);
+          if (0 == n) continue; else return;
+        } catch (CStoreException e) {
+          final int n = JOptionPane.showOptionDialog(null,
+              String.format(FAIL_MSG, e.getMessage()),
+              ERROR_TITLE,
+              JOptionPane.YES_NO_OPTION,
+              JOptionPane.WARNING_MESSAGE,
+              null,
+              FAIL_OPTIONS,
+              FAIL_OPTIONS[0]);
+          if (0 == n) continue; else return;
+        }
       }
     } catch (CancelException e) {     // exit quietly
     } finally {
       ic.unregister(this);
       try {
-	close();
+        close();
       } catch (IOException e) {}        // no use squawking now
     }
   }
-  
+
   /**
    * Returns the Transfer Syntax UID for the given DicomObject
    * @param o DicomObject
