@@ -5,6 +5,7 @@
 package org.nrg.dcm.browse;
 
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 import java.awt.Component;
 import java.awt.Container;
@@ -36,7 +37,9 @@ final class AboutDialog extends JDialog {
 		  System.err.println("Unable to load properties: " + e.getMessage());
 	  }
 	  TITLE = props.getProperty("application.name");
-	  VERSION = props.getProperty("application.version") + " " + "($Rev$)";
+	  VERSION = String.format("%s (%s)",
+		  props.getProperty("application.version"),
+		  "$Rev$");
   }
 
   AboutDialog(final Frame owner, final String title) {
