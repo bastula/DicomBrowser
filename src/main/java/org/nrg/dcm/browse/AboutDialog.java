@@ -1,11 +1,9 @@
 /**
- * $Id: AboutDialog.java,v 1.7 2008/04/10 21:29:14 karchie Exp $
- * Copyright (c) 2006,2007 Washington University
+ * Copyright (c) 2006-2009 Washington University
  */
 package org.nrg.dcm.browse;
 
 import java.util.Properties;
-import java.util.regex.Pattern;
 
 import java.awt.Component;
 import java.awt.Container;
@@ -91,6 +89,4 @@ final class AboutDialog extends JDialog {
     this.pack();
     setResizable(false);
   }
-  
-  
 }
