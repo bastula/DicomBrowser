@@ -9,7 +9,7 @@
 	<classpathentry kind="var" path="M2_REPO/commons-cli/commons-cli/1.1/commons-cli-1.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/com/apple/ui/1.5.0/ui-1.5.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/log4j/log4j/1.2.15/log4j-1.2.15.jar" sourcepath="M2_REPO/log4j/log4j/1.2.15/log4j-1.2.15-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/ij/ij/1.40g/ij-1.40g.jar"/>
+	<classpathentry kind="var" path="M2_REPO/ij/ij/1.41o/ij-1.41o.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-beanutils/commons-beanutils/1.7.0/commons-beanutils-1.7.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-log4j12/1.5.0/slf4j-log4j12-1.5.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-api/1.5.0/slf4j-api-1.5.0.jar"/>
