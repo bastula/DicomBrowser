@@ -276,12 +276,13 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
   
   private final JTable table;
   private final FileSetTableModel tableModel;
+  private final AttrTableCellEditor cellEditor;
 
   final StatusBar statusBar;
 
   public DicomBrowser(final JFrame frame, final FileSet fs) {
+    super(new BorderLayout());
     this.frame = frame;
-    this.setLayout(new BorderLayout());
 
     treeModel = new FileSetTreeModel(frame, fs);
     tableModel = new FileSetTableModel(this, fs);
@@ -363,7 +364,7 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
 
     // specialize editing of value column
     final TableColumn valueCol = table.getColumnModel().getColumn(FileSetTableModel.VALUE_COLUMN);
-    final AttrTableCellEditor cellEditor = new AttrTableCellEditor(frame, table);
+    cellEditor = new AttrTableCellEditor(frame, table);
     tree.addTreeSelectionListener(cellEditor);
     valueCol.setCellEditor(cellEditor);
 
@@ -375,7 +376,7 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
     splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     splitPane.setLeftComponent(treeView);
     splitPane.setRightComponent(tableView);
-    add(splitPane, BorderLayout.NORTH);
+    add(splitPane, BorderLayout.CENTER);
     frame.addComponentListener(this);
 
     statusBar = new StatusBar();
@@ -411,14 +412,17 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
     } else if (command.equals(getString(OPEN_NEW_WINDOW_ITEM))) {
       openFiles(null);
     } else if (command.equals(getString(SEND_ITEM))) {
+      cellEditor.stopCellEditing();
       final JDialog sendDialog = new CStoreDialog(this, tableModel);
       sendDialog.setVisible(true);
     } else if (command.equals(getString(SAVE_ITEM))) {
+      cellEditor.stopCellEditing();
       final JDialog saveDialog = new SaveDialog(this, tableModel);
       saveDialog.setVisible(true);
     } else if (command.equals(getString(CLOSE_WIN_ITEM))) {
       closeBrowser();
     } else if (command.equals(getString(APPLY_SCRIPT_ITEM))) {
+      cellEditor.stopCellEditing();
       applyScript();
     } else if (command.equals(getString(ABOUT_ITEM))) {
       final JDialog aboutDialog = new AboutDialog(frame, getString(ABOUT_TITLE));
