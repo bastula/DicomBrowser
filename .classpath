@@ -15,12 +15,12 @@
 	<classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-api/1.5.0/slf4j-api-1.5.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/dom4j/dom4j/1.6.1/dom4j-1.6.1.jar" sourcepath="M2_REPO/dom4j/dom4j/1.6.1/dom4j-1.6.1-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/net/sf/ezmorph/ezmorph/1.0.4/ezmorph-1.0.4.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/dcm4che/dcm4che-core/2.0.18/dcm4che-core-2.0.18.jar" sourcepath="M2_REPO/org/dcm4che/dcm4che-core/2.0.18/dcm4che-core-2.0.18-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/dcm4che/dcm4che-core/2.0.19-SNAPSHOT/dcm4che-core-2.0.19-SNAPSHOT.jar" sourcepath="M2_REPO/dcm4che/dcm4che-core/2.0.19-SNAPSHOT/dcm4che-core-2.0.19-SNAPSHOT-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/javax/activation/activation/1.1/activation-1.1.jar" sourcepath="M2_REPO/javax/activation/activation/1.1/activation-1.1-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/xml-apis/xml-apis/1.0.b2/xml-apis-1.0.b2.jar" sourcepath="M2_REPO/xml-apis/xml-apis/1.0.b2/xml-apis-1.0.b2-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/junit/junit/4.0/junit-4.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/javax/jms/jms/1.1/jms-1.1.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/dcm4che/dcm4che-net/2.0.18/dcm4che-net-2.0.18.jar" sourcepath="M2_REPO/org/dcm4che/dcm4che-net/2.0.18/dcm4che-net-2.0.18-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/dcm4che/dcm4che-net/2.0.19-SNAPSHOT/dcm4che-net-2.0.19-SNAPSHOT.jar" sourcepath="M2_REPO/dcm4che/dcm4che-net/2.0.19-SNAPSHOT/dcm4che-net-2.0.19-SNAPSHOT-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-lang/commons-lang/2.3/commons-lang-2.3.jar"/>
 	<classpathentry kind="var" path="M2_REPO/com/sun/jmx/jmxri/1.2.1/jmxri-1.2.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/javax/mail/mail/1.4/mail-1.4.jar" sourcepath="M2_REPO/javax/mail/mail/1.4/mail-1.4-sources.jar"/>
