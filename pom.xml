@@ -86,7 +86,7 @@
     <dependency>
       <groupId>ij</groupId>
       <artifactId>ij</artifactId>
-      <version>1.40g</version>
+      <version>1.41o</version>
     </dependency>
     <dependency>
       <groupId>org.ostermiller</groupId>
