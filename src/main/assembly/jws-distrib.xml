@@ -1,0 +1,23 @@
+<assembly>
+	<id>jws-distrib</id>
+	<formats>
+		<format>tar.gz</format>
+	</formats>
+	<dependencySets>
+		<dependencySet>
+			<outputDirectory>lib</outputDirectory>
+		</dependencySet>
+	</dependencySets>
+	<files>
+		<file>
+			<source>target/${pom.name}-${pom.version}.jar</source>
+			<outputDirectory>lib</outputDirectory>
+		</file>
+		<file>
+			<source>src/main/jws/DicomBrowser.jnlp</source>
+			<outputDirectory>.</outputDirectory>
+			<lineEnding>crlf</lineEnding>
+			<fileMode>0644</fileMode>
+		</file>
+	</files>
+</assembly>
