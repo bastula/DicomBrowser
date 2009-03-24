@@ -1,7 +1,7 @@
 <assembly>
-	<id>jws-distrib</id>
+	<id>jws</id>
 	<formats>
-		<format>tar.gz</format>
+		<format>dir</format>
 	</formats>
 	<dependencySets>
 		<dependencySet>
