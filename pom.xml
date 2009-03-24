@@ -35,7 +35,7 @@
   <groupId>org.nrg</groupId>
   <artifactId>DicomBrowser</artifactId>
   <packaging>jar</packaging>
-  <version>1.4-SNAPSHOT</version>
+  <version>1.4</version>
   <name>DicomBrowser</name>
   <url>http://nrg.wustl.edu/projects/DICOM/DicomBrowser.jsp</url>
   <dependencies>
@@ -63,7 +63,7 @@
     <dependency>
       <groupId>org.nrg</groupId>
       <artifactId>DicomEdit</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.0</version>
     </dependency>
     <dependency>
       <!-- Apple library for Mac-specific GUI -->
