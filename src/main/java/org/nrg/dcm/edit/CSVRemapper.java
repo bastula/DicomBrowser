@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.net.URL;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -298,7 +299,7 @@ public final class CSVRemapper {
   }
 
   public void apply(final File remapSpreadsheet, final File outDir, final Collection<File> roots)
-  throws IOException,AttributeException,InvalidRemapsException {
+  throws IOException,AttributeException,InvalidRemapsException,SQLException {
      final Collection<Statement> statements = new LinkedList<Statement>(globalStatements);
 
     final FileSet fs = new FileSet(roots.toArray(new File[0]), false,

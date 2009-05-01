@@ -5,7 +5,6 @@
 package org.nrg.dcm.browse;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.ListResourceBundle;
 import java.util.ResourceBundle;
@@ -78,7 +77,7 @@ public final class FileSetTreeModel implements TreeModel {
     try {
       fs.add(files, pn);
       handleAdd();
-    } catch (final IOException e) {
+    } catch (final Exception e) {
       SwingUtilities.invokeLater(new Runnable() {
 	public void run() {
 	  JOptionPane.showMessageDialog(window,
