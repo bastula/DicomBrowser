@@ -6,6 +6,7 @@ package org.nrg.dcm.browse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -632,6 +633,13 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
 	      FILE_LOAD_FAILED_TITLE,
 	      JOptionPane.ERROR_MESSAGE);
 	  return;
+	} catch (SQLException e) {
+      JOptionPane.showMessageDialog(null,
+          String.format(FILE_LOAD_FAILED_FORMAT, e.getMessage()),
+          FILE_LOAD_FAILED_TITLE,
+          JOptionPane.ERROR_MESSAGE);
+      return;
+	  
 	}
 	SwingUtilities.invokeLater(new Runnable() {
 	  public void run() { createAndShowGUI(fs); }
@@ -717,7 +725,12 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
     browser.saveItem.addActionListener(browser);
     fileMenu.add(browser.saveItem);
 
-    if (fs.size() == 0) {
+    try {
+      if (0 == fs.size()) {
+        browser.sendItem.setEnabled(false);
+        browser.saveItem.setEnabled(false);
+      }
+    } catch (SQLException e) {
       browser.sendItem.setEnabled(false);
       browser.saveItem.setEnabled(false);
     }

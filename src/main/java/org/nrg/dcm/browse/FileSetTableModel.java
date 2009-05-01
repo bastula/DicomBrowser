@@ -6,6 +6,7 @@ package org.nrg.dcm.browse;
 import java.io.File;
 import java.io.IOException;
 
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -16,6 +17,7 @@ import java.util.ListIterator;
 import java.util.Queue;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.Map;
 import java.util.HashMap;
@@ -209,13 +211,16 @@ implements TreeSelectionListener {
 				fv = fs.getValuesFromFile(file, 0, MAXTAG);
 			} catch (ConversionFailureException e) {
 				e.printStackTrace();
-				logger.error("conversion failure: " + e.getMessage());
-				System.exit(1);
+				logger.error("error caching values", e);
 				continue;     // move on to next file
 			} catch (IOException e) {
 				e.printStackTrace();
-				logger.error("i/o error: " + e.getMessage());
+				logger.error("error caching values", e);
 				continue;     // move on to next file
+			} catch (SQLException e) {
+			  e.printStackTrace();
+			  logger.error("error cachine values", e);
+			  continue;  // move on to next file
 			} catch (OutOfMemoryError e) {
 				JOptionPane.showMessageDialog(browser, rsrcb.getString(OUT_OF_MEMORY_MESSAGE),
 						rsrcb.getString(OUT_OF_MEMORY_TITLE), JOptionPane.ERROR_MESSAGE);
@@ -484,7 +489,6 @@ implements TreeSelectionListener {
 	 * @param s parse tree from anonymization script
 	 * @param onlySelected if true, script is applied only to selected files; otherwise, to the whole file set
 	 * @return Command representing this script action
-	 * @throws IOException
 	 */
 	public Command doScript(final org.nrg.dcm.edit.Statement s, final boolean onlySelected, ProgressMonitor pm) {
 		final Map<Operation,Set<File>> ops = new HashMap<Operation,Set<File>>();
@@ -492,13 +496,21 @@ implements TreeSelectionListener {
 
 		if (s == null) return null;
 
-		final Collection<File> files = onlySelected ? selectedFiles : fs.getDataFiles();
+		final Collection<File> files;
+		try {
+		  files = onlySelected ? selectedFiles : fs.getDataFiles();
+		} catch (SQLException e) {
+		  JOptionPane.showMessageDialog(browser.getFrame(),
+		      "Error getting file list: " + e.getMessage(),
+		      e.getMessage(), JOptionPane.ERROR_MESSAGE);
+		  return null;    // TODO: is this okay?
+		}
 		int progress = 0;
 		pm.setMinimum(0);
 		pm.setMaximum(files.size());
 		pm.setProgress(progress);
 
-		for (final File file : onlySelected ? selectedFiles : fs.getDataFiles()) {
+		for (final File file : files) {
 			try {
 			    for (final Object opo : s.getOperations(file)) {
 			      final Operation op = (Operation)opo;
@@ -612,21 +624,48 @@ implements TreeSelectionListener {
 	 */
 	synchronized void send(final String host, final String port, final String aeTitle,
 			final boolean isTLS, final boolean allFiles) {
-		// put in a TreeSet so the files go in a sensible order
-		final Set<File> files = new TreeSet<File>(allFiles ? fs.getDataFiles() : selectedFiles);
+	  try {
+	    final Set<File> files;
+	    final TransferCapability[] tcs;
+	    if (allFiles) {
+	      files = fs.getDataFiles();
+	      tcs = fs.getTransferCapabilities(TransferCapability.SCU);
+	    } else {
+	      files = selectedFiles;
+	      tcs = fs.getTransferCapabilities(TransferCapability.SCU, selectedFiles);
+	    }
+	    
+	    logger.debug("Requested transfer capabilities: " + Arrays.toString(tcs));
 
-		final ProgressMonitor pm = new ProgressMonitor(browser.getFrame(),
-				rsrcb.getString(SENDING_FILES), "", 0, files.size());
-		final Exporter sender = new Sender(host, port, isTLS, aeTitle,
-				fs.getTransferCapabilities(TransferCapability.SCU), files, buildStatements(), pm);
+	    final ProgressMonitor pm = new ProgressMonitor(browser.getFrame(),
+	        rsrcb.getString(SENDING_FILES), "", 0, files.size());
+	    final Exporter sender = new Sender(host, port, isTLS, aeTitle, tcs, files, buildStatements(), pm);
 
-		// Lots to be done, some of it slow; spin it off as a separate thread.
-		executor.execute(sender);
+	    // Lots to be done, some of it slow; spin it off as a separate thread.
+	    executor.execute(sender);
+	  } catch (SQLException e) {
+        logger.error("unable to get data files", e);
+        JOptionPane.showMessageDialog(browser.getFrame(),      // TODO: localize
+            "Unable to retrieve data files from database: " + e.getMessage(),
+            "Send failed",
+            JOptionPane.ERROR_MESSAGE);
+        return;
+	  }
 	}
 
 
 	synchronized void saveInAdjacentDir(final String suffix, final boolean allFiles) {
-		final Set<File> files = new TreeSet<File>(allFiles ? fs.getDataFiles() : selectedFiles);
+		final SortedSet<File> files;
+		try {
+		  files = new TreeSet<File>(allFiles ? fs.getDataFiles() : selectedFiles);
+		} catch (SQLException e) {
+          logger.error("unable to get data files", e);
+          JOptionPane.showMessageDialog(browser.getFrame(),      // TODO: localize
+              "Unable to retrieve data files from database: " + e.getMessage(),
+              "Export failed",
+              JOptionPane.ERROR_MESSAGE);
+          return;
+		}
 
 		final ProgressMonitorI pm = SwingProgressMonitor.getMonitor(browser.getFrame(),
 				rsrcb.getString(WRITING_FILES), "", 0, files.size());
@@ -637,7 +676,17 @@ implements TreeSelectionListener {
 	}
 
 	synchronized void saveInAdjacentFile(final String suffix, final boolean allFiles) {
-		final Set<File> files = new TreeSet<File>(allFiles ? fs.getDataFiles() : selectedFiles);
+		final SortedSet<File> files;
+		try {
+		  files = new TreeSet<File>(allFiles ? fs.getDataFiles() : selectedFiles);
+		} catch (SQLException e) {
+          logger.error("unable to get data files", e);
+          JOptionPane.showMessageDialog(browser.getFrame(),      // TODO: localize
+              "Unable to retrieve data files from database: " + e.getMessage(),
+              "Export failed",
+              JOptionPane.ERROR_MESSAGE);
+          return;
+		}
 
 		final ProgressMonitorI pm = SwingProgressMonitor.getMonitor(browser.getFrame(),
 				rsrcb.getString(WRITING_FILES), "", 0, files.size());
@@ -683,7 +732,17 @@ implements TreeSelectionListener {
 		}
 
 		// build map from each file to its root
-		final Set<File> files = allFiles ? fs.getDataFiles() : new HashSet<File>(selectedFiles);
+		final Set<File> files;
+		try {
+		  files = allFiles ? fs.getDataFiles() : new HashSet<File>(selectedFiles);
+		} catch (SQLException e) {
+		  logger.error("unable to get data files", e);
+          JOptionPane.showMessageDialog(browser.getFrame(),      // TODO: localize
+              "Unable to retrieve data files from database: " + e.getMessage(),
+              "Export failed",
+              JOptionPane.ERROR_MESSAGE);
+          return;
+		}
 		final Map<File,File> fileroots = new HashMap<File,File>();
 		for (final File f : files) {
 			final String path;
@@ -743,7 +802,18 @@ implements TreeSelectionListener {
 
 
 	synchronized void overwrite(final boolean allFiles) {
-		final Set<File> files = new TreeSet<File>(allFiles ? fs.getDataFiles() : selectedFiles);
+		final Set<File> files;
+		try {
+		  files = new TreeSet<File>(allFiles ? fs.getDataFiles() : selectedFiles);
+		} catch (SQLException e) {
+          logger.error("unable to get data files", e);
+          JOptionPane.showMessageDialog(browser.getFrame(),      // TODO: localize
+              "Unable to retrieve data files from database: " + e.getMessage(),
+              "Export failed",
+              JOptionPane.ERROR_MESSAGE);
+          return;
+		}
+		
 		final ProgressMonitorI pm = SwingProgressMonitor.getMonitor(browser.getFrame(),
 				rsrcb.getString(WRITING_FILES), "", 0, files.size());
 
