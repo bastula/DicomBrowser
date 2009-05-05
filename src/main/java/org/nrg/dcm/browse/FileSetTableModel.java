@@ -635,7 +635,13 @@ implements TreeSelectionListener {
 	      tcs = fs.getTransferCapabilities(TransferCapability.SCU, selectedFiles);
 	    }
 	    
-	    logger.debug("Requested transfer capabilities: " + Arrays.toString(tcs));
+	    if (logger.isDebugEnabled()) {
+		logger.debug("Requested transfer capabilities:");
+		for (final TransferCapability tc : tcs) {
+		    logger.debug("SOP Class " + tc.getSopClass() + " " + tc.getRole());
+		    logger.debug("TSUIDs " + Arrays.toString(tc.getTransferSyntax()));
+		}
+	    }
 
 	    final ProgressMonitor pm = new ProgressMonitor(browser.getFrame(),
 	        rsrcb.getString(SENDING_FILES), "", 0, files.size());

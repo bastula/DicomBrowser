@@ -59,10 +59,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Logger;
-import org.apache.log4j.Level;
-
 import org.nrg.dcm.FileSet;
 
 import org.nrg.dcm.edit.EditDCMLex;
@@ -74,7 +70,7 @@ import org.nrg.dcm.edit.UIDGenerator;
  */
 public final class DicomBrowser extends JPanel
 implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionListener {
-  static private final long serialVersionUID = 1; 
+  private static final long serialVersionUID = 1; 
 
   private static final String FILE_MENU = "File";
   private static final String OPEN_ITEM = "Open...";
@@ -800,15 +796,11 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
 
 
   public static void main(final String[] args) {
-    BasicConfigurator.configure();
-    // Don't tell me about trivial things unless I ask.
-    Logger.getLogger("org.dcm4che2").setLevel(System.getProperty("dcm4che.debug") == "true" ? Level.DEBUG : Level.WARN);
-    Logger.getLogger("org.nrg").setLevel(System.getProperty("nrg.debug") == "true" ? Level.DEBUG : Level.WARN);
-
     // if DicomBrowser.value.maxlen is set, assign the maximum value length preference
     final String maxValueLen = System.getProperty("DicomBrowser." + MAX_LEN_PREF);
-    if (maxValueLen != null)
-      prefs.putInt(MAX_LEN_PREF, Integer.parseInt(maxValueLen));
+    if (null != maxValueLen) {
+	prefs.putInt(MAX_LEN_PREF, Integer.parseInt(maxValueLen));
+    }
 
     SwingUtilities.invokeLater(new Runnable() {
       public void run() { 
@@ -819,8 +811,9 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
     });
 
     final File[] files = new File[args.length];
-    for (int i = 0; i < args.length; i++)
+    for (int i = 0; i < args.length; i++) {
       files[i] = new File(args[i]);
+    }
 
     new FileSetReader(null, files).run();
   }
