@@ -300,8 +300,8 @@ public final class CSVRemapper {
 
   public void apply(final File remapSpreadsheet, final File outDir, final Collection<File> roots)
   throws IOException,AttributeException,InvalidRemapsException,SQLException {
-     final Collection<Statement> statements = new LinkedList<Statement>(globalStatements);
-
+      final StatementList statements = new StatementArrayList();
+ 
     final FileSet fs = new FileSet(roots.toArray(new File[0]), false,
 	new StreamProgressMonitor(messages, "Reading", "source DICOM"));
     final Collection<File> files = fs.getDataFiles();

@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.Collection;
 
 import org.nrg.dcm.ProgressMonitorI;
-import org.nrg.dcm.edit.Statement;
+import org.nrg.dcm.edit.StatementList;
 
 /**
  * Places new files in a directory adjacent to the original.
@@ -14,7 +14,7 @@ import org.nrg.dcm.edit.Statement;
 final class AdjacentDirFileWriter extends FileWriter {
   private final String format;
   
-  public AdjacentDirFileWriter(final Collection<File> files, final Statement s,
+  public AdjacentDirFileWriter(final Collection<File> files, final StatementList s,
       final String format, final ProgressMonitorI pm) {
     super(files, s, pm);
     this.format = format;

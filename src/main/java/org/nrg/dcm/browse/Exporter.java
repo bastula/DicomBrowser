@@ -19,7 +19,7 @@ import org.dcm4che2.data.UID;
 import org.nrg.dcm.CStoreException;
 import org.nrg.dcm.edit.Action;
 import org.nrg.dcm.edit.AttributeException;
-import org.nrg.dcm.edit.Statement;
+import org.nrg.dcm.edit.StatementList;
 import org.nrg.dcm.io.DicomFileMapper;
 
 
@@ -30,17 +30,12 @@ abstract class Exporter implements Runnable {
   private static final String FAIL_MSG = "Export failed: %1$s";
   private static final Object[] FAIL_OPTIONS = {"Try next object", "Cancel export"};
 
-  private final Collection<Statement> ss;
+  private final StatementList statements;
   private final Collection<File> files;
 
-  Exporter(final Collection<Statement> s, final Collection<File> files) {
-    this.ss = new ArrayList<Statement>(s);
+  Exporter(final StatementList statements, final Collection<File> files) {
+    this.statements = statements;
     this.files = new ArrayList<File>(files);
-  }
-
-  Exporter(final Statement s, final Collection<File> files) {
-    this(new ArrayList<Statement>(), files);
-    if (null != s) this.ss.add(s);
   }
 
   final class CancelException extends Exception {
@@ -59,24 +54,18 @@ abstract class Exporter implements Runnable {
     return (DicomObject)DicomFileMapper.getInstance().map(f);
   }
 
-  @SuppressWarnings("unchecked")
-  final private DicomObject apply(final File f) throws IOException {
-    final DicomObject o = read(f);
-    final Collection<Action> actions = new ArrayList<Action>();
-    for (final Statement s : ss) {
-      try {
-        actions.addAll(s.getActions(f, o));
-      } catch (AttributeException e) {
-        throw new RuntimeException("Caught AttributeException when only file constraints are used");
-      }
-    }
-    if (!actions.isEmpty()) {
-      for (final Action action : actions) {
-        action.apply();
-      }
-    }
 
-    return o;
+  final private DicomObject apply(final File f) throws IOException {
+      final DicomObject o = read(f);
+      try {
+	  for (final Object action : statements.getActions(f, o)) {
+	      ((Action)action).apply();
+	  }
+      } catch (AttributeException e) {
+	  throw new RuntimeException("Caught AttributeException when only file constraints are used");
+      }
+
+      return o;
   }
 
   final public void run() {

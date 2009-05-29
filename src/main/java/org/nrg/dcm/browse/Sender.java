@@ -24,7 +24,7 @@ import org.dcm4che2.net.TransferCapability;
 
 import org.nrg.dcm.CStoreException;
 import org.nrg.dcm.DicomSender;
-import org.nrg.dcm.edit.Statement;
+import org.nrg.dcm.edit.StatementList;
 
 final class Sender extends Exporter {
   private static final String MAKE_CONN_MSG = "Making network connection";
@@ -49,7 +49,7 @@ final class Sender extends Exporter {
 
   Sender(final String host, final String port, final boolean isTLS, final String aeTitle,
       final TransferCapability[] tcs, final Collection<File> files,
-      final Statement statements, final ProgressMonitor pm) {
+      final StatementList statements, final ProgressMonitor pm) {
     super(statements, files);
 
     final NetworkConnection lnc;
@@ -97,14 +97,18 @@ final class Sender extends Exporter {
 
   @Override
   void open() throws IOException {
-    if (null != pm) pm.setNote(MAKE_CONN_MSG);
+    if (null != pm) {
+	pm.setNote(MAKE_CONN_MSG);
+    }
   }
 
 
   @Override
-  protected void process(File f, DicomObject o)
+  protected void process(final File f, final DicomObject o)
   throws IOException,CancelException,CStoreException {
-    if (null != pm) pm.setNote(f.getName());
+    if (null != pm) {
+	pm.setNote(f.getName());
+    }
 
     sender.send(o, getTransferSyntaxUID(o));
 
@@ -118,7 +122,11 @@ final class Sender extends Exporter {
 
   @Override
   void close() {
-    if (null != sender) sender.close();
-    if (null != pm) pm.close();
+    if (null != sender) {
+	sender.close();
+    }
+    if (null != pm) {
+	pm.close();
+    }
   }
 }
