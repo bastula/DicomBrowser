@@ -1,6 +1,5 @@
 /**
- * $Id: FileWriter.java,v 1.6 2008/04/02 22:24:39 karchie Exp $
- * Copyright (c) 2006 Washington University
+ * Copyright (c) 2006-2009 Washington University
  */
 package org.nrg.dcm.browse;
 
@@ -19,7 +18,7 @@ import org.dcm4che2.data.VR;
 import org.dcm4che2.io.DicomOutputStream;
 
 import org.nrg.dcm.ProgressMonitorI;
-import org.nrg.dcm.edit.Statement;
+import org.nrg.dcm.edit.StatementList;
 
 /**
  * @author Kevin A. Archie <karchie@npg.wustl.edu>
@@ -36,7 +35,7 @@ abstract class FileWriter extends Exporter {
    * @param files
    * @params pm
    */
-  public FileWriter(final Collection<File> files, final Collection<Statement> s,
+  public FileWriter(final Collection<File> files, final StatementList s,
       ProgressMonitorI pm) {
     super(s, files);
     this.pm = pm;
@@ -44,14 +43,6 @@ abstract class FileWriter extends Exporter {
     pm.setMaximum(files.size());
   }
   
-  public FileWriter(final Collection<File> files, final Statement s,
-      ProgressMonitorI pm) {
-    super(s, files);
-    this.pm = pm;
-    pm.setMinimum(0);
-    pm.setMaximum(files.size());
-  }
-
   abstract File getDestFile(File f) throws IOException;
 
   /* (non-Javadoc)
@@ -71,37 +62,41 @@ abstract class FileWriter extends Exporter {
     fmi.initFileMetaInformation(cuid, iuid, tsuid);
     fmi.putString(Tag.SourceApplicationEntityTitle, VR.AE, AE_TITLE);
 
-    DicomOutputStream dos = null;
-    OutputStream os = null;
-    FileOutputStream fos = null;
-
+    final FileOutputStream fos = new FileOutputStream(getDestFile(f));
     try {
-      fos = new FileOutputStream(getDestFile(f));
-      os = (f.getName().endsWith(".gz")) ? new GZIPOutputStream(fos) : new BufferedOutputStream(fos);
-
-      dos = new DicomOutputStream(os);
-      dos.writeFileMetaInformation(fmi);
-      dos.writeDataset(o, tsuid);
+	final OutputStream os;
+	if (f.getName().endsWith(".gz")) {
+	    os = new GZIPOutputStream(fos);
+	} else {
+	    os = new BufferedOutputStream(fos);
+	}
+	try {
+	    final DicomOutputStream dos = new DicomOutputStream(os);
+	    try {
+		dos.writeFileMetaInformation(fmi);
+		dos.writeDataset(o, tsuid);
+	    } finally {
+		dos.close();
+	    }
+	} finally {
+	    os.close();
+	}
     } finally {
-      // This is ugly, but any of the constructors could fail.
-      if (dos != null)
-	dos.close();
-      else if (os != null)
-	os.close();
-      else if (fos != null)
 	fos.close();
     }
 
     if (pm != null) {
-      if (pm.isCanceled())
+      if (pm.isCanceled()) {
 	throw new CancelException();
+      }
       pm.setProgress(++progress);
     }
   }
 
   @Override
   void close() {
-    if (pm != null)
+    if (null != pm) {
       pm.close();
+    }
   }
 }

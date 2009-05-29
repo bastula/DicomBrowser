@@ -1,6 +1,5 @@
 /**
- * $Id: AdjacentFileWriter.java,v 1.2 2008/04/02 18:30:16 karchie Exp $
- * Copyright (c) 2006 Washington University
+ * Copyright (c) 2006-2009 Washington University
  */
 package org.nrg.dcm.browse;
 
@@ -9,7 +8,7 @@ import java.io.IOException;
 import java.util.Collection;
 
 import org.nrg.dcm.ProgressMonitorI;
-import org.nrg.dcm.edit.Statement;
+import org.nrg.dcm.edit.StatementList;
 
 /**
  * Writes each new file next to the original, with the given suffix.
@@ -20,7 +19,7 @@ public final class AdjacentFileWriter extends FileWriter {
   
   final String suffix;
   
-  public AdjacentFileWriter(final Collection<File> files, final Statement s,
+  public AdjacentFileWriter(final Collection<File> files, final StatementList s,
     final String suffix, final ProgressMonitorI pm) {
       super(files, s, pm);
       this.suffix = suffix;

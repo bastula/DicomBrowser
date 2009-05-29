@@ -63,6 +63,7 @@ import org.nrg.dcm.FileSet;
 
 import org.nrg.dcm.edit.EditDCMLex;
 import org.nrg.dcm.edit.EditDCMCup;
+import org.nrg.dcm.edit.StatementList;
 import org.nrg.dcm.edit.UIDGenerator;
 
 /**
@@ -589,9 +590,10 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
 	    final Runnable commandWorker = new Runnable() {
 	      public void run() {
 		final Command command =
-		  tableModel.doScript((org.nrg.dcm.edit.Statement)root.value, option==1, pm);
-		if (command != null)
+		  tableModel.doScript((StatementList)root.value, 1==option, pm);
+		if (command != null) {
 		  add(command);
+		}
 	      }
 	    };
 	    new Thread(commandWorker).start();

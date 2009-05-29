@@ -49,6 +49,8 @@ import org.nrg.dcm.edit.Constraint;
 import org.nrg.dcm.edit.Deletion;
 import org.nrg.dcm.edit.Operation;
 import org.nrg.dcm.edit.Statement;
+import org.nrg.dcm.edit.StatementArrayList;
+import org.nrg.dcm.edit.StatementList;
 
 
 /**
@@ -485,16 +487,18 @@ implements TreeSelectionListener {
 
 
 	/**
-	 * Applies the given script parse tree.
-	 * @param s parse tree from anonymization script
+	 * Applies the given parsed script.
+	 * @param statements Statements parsed from anonymization script
 	 * @param onlySelected if true, script is applied only to selected files; otherwise, to the whole file set
 	 * @return Command representing this script action
 	 */
-	public Command doScript(final org.nrg.dcm.edit.Statement s, final boolean onlySelected, ProgressMonitor pm) {
+	public Command doScript(final StatementList statements, final boolean onlySelected, ProgressMonitor pm) {
 		final Map<Operation,Set<File>> ops = new HashMap<Operation,Set<File>>();
 		final Map<Integer,Map<File,Operation>> replaced = new HashMap<Integer,Map<File,Operation>>();
 
-		if (s == null) return null;
+		if (null == statements) {
+		    return null;
+		}
 
 		final Collection<File> files;
 		try {
@@ -512,7 +516,7 @@ implements TreeSelectionListener {
 
 		for (final File file : files) {
 			try {
-			    for (final Object opo : s.getOperations(file)) {
+			    for (final Object opo : statements.getOperations(file)) {
 			      final Operation op = (Operation)opo;
 			      if (!ops.containsKey(op)) {
 			        ops.put(op, new HashSet<File>());
@@ -592,11 +596,11 @@ implements TreeSelectionListener {
 
 
 	/**
-	 * Build a set of Statements equivalent to our operation map
+	 * Build a list of Statements equivalent to our operation map
 	 * @return head of Statement list
 	 */
-	private Statement buildStatements() {
-		// Build a set of Statements equivalent to our operation map
+	private StatementList buildStatements() {
+		// Build a list of Statements equivalent to our operation map
 		final Map<Operation,Set<File>> ops = new HashMap<Operation,Set<File>>();
 		for (final Map<File,Operation> tagops : allOps.values()) {
 			for (final Map.Entry<File,Operation> e : tagops.entrySet()) {
@@ -607,9 +611,10 @@ implements TreeSelectionListener {
 			}
 		}
 
-		Statement statements = null;
-		for (final Map.Entry<Operation,Set<File>> e : ops.entrySet())
-			statements = new Statement(new Constraint(null, e.getValue()), e.getKey(), statements);
+		final StatementList statements = new StatementArrayList();
+		for (final Map.Entry<Operation,Set<File>> e : ops.entrySet()) {
+			statements.add(new Statement(new Constraint(null, e.getValue()), e.getKey()));
+		}
 		return statements;
 	}
 

@@ -1,6 +1,5 @@
 /**
- * $Id: RerootedFileWriter.java,v 1.4 2008/04/02 18:30:16 karchie Exp $
- * Copyright (c) 2008 Washington University
+ * Copyright (c) 2008-2009 Washington University
  */
 package org.nrg.dcm.browse;
 
@@ -11,7 +10,7 @@ import java.util.Collection;
 import org.apache.log4j.Logger;
 import org.nrg.dcm.ProgressMonitorI;
 import org.nrg.dcm.edit.FileRootRemapper;
-import org.nrg.dcm.edit.Statement;
+import org.nrg.dcm.edit.StatementList;
 
 /**
  * Writes modified files to a new hierarchy under a new root
@@ -25,12 +24,12 @@ public class RerootedFileWriter extends FileWriter {
    * @param outDir Root of the new directory hierarchy
    * @param roots Roots under which original files can be found
    * @param files Original files to be processed
-   * @param s Collection of Statements to be performed
+   * @param s Statements to be performed
    * @param pm
    * @throws IOException If a root directory (new or existing) cannot be converted to canonical form
    */
   public RerootedFileWriter(final File outDir,
-      final Collection<File> roots, final Collection<File> files, final Collection<Statement> s,
+      final Collection<File> roots, final Collection<File> files, final StatementList s,
       final ProgressMonitorI pm)
   throws IOException {
     super(files, s, pm);
