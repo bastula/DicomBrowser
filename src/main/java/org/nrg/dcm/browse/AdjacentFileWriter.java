@@ -14,6 +14,7 @@ import org.nrg.dcm.edit.StatementList;
  * Writes each new file next to the original, with the given suffix.
  * @author Kevin A. Archie <karchie@npg.wustl.edu>
  */
+@Deprecated
 public final class AdjacentFileWriter extends FileWriter {
   private final static String DCM_SUFFIX = ".dcm";
   

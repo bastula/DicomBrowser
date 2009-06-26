@@ -11,6 +11,7 @@ import org.nrg.dcm.edit.StatementList;
  * Places new files in a directory adjacent to the original.
  * @author Kevin A. Archie <karchie@npg.wustl.edu>
  */
+@Deprecated
 final class AdjacentDirFileWriter extends FileWriter {
   private final String format;
   

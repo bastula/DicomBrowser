@@ -22,8 +22,8 @@ import org.nrg.dcm.edit.AttributeException;
 import org.nrg.dcm.edit.StatementList;
 import org.nrg.dcm.io.DicomFileMapper;
 
-
-abstract class Exporter implements Runnable {
+@Deprecated
+public abstract class Exporter implements Runnable {
   private static final String IO_SKIP_MSG = "Unable to read %1$s : %2$s; skipping";     // TODO: localize
   private static final String SOCKET_MSG = "Network error: %1$s";
   private static final String ERROR_TITLE = "Export failed";
@@ -50,12 +50,12 @@ abstract class Exporter implements Runnable {
 
   void close() throws IOException {}
 
-  final DicomObject read(final File f) throws IOException {
+  protected final DicomObject read(final File f) throws IOException {
     return (DicomObject)DicomFileMapper.getInstance().map(f);
   }
 
 
-  final private DicomObject apply(final File f) throws IOException {
+  private final DicomObject apply(final File f) throws IOException {
       final DicomObject o = read(f);
       try {
 	  for (final Object action : statements.getActions(f, o)) {

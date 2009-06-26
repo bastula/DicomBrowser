@@ -1,18 +1,19 @@
 /**
- * $Id: StreamProgressMonitor.java,v 1.2 2008/04/02 22:25:26 karchie Exp $
- * Copyright (c) 2008 Washington University
+ * Copyright (c) 2008-2009 Washington University
  */
 package org.nrg.dcm.edit;
 
 import java.io.PrintStream;
 
 import org.nrg.dcm.ProgressMonitorI;
+import org.nrg.util.EditProgressMonitor;
 
 /**
  * Sends progress messages to a PrintStream.
  * @author Kevin A. Archie <karchie@npg.wustl.edu>
  */
-final class StreamProgressMonitor implements ProgressMonitorI {
+final class StreamProgressMonitor
+implements ProgressMonitorI,EditProgressMonitor {
   private final static String LINE_SEPARATOR = System.getProperty("line.separator");
   private final PrintStream os;
   private final String desc, format, startNote;

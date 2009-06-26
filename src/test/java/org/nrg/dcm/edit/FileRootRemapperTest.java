@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.junit.Test;
+import org.nrg.dcm.io.FileRootRemapper;
 
 /**
  * @author Kevin A. Archie <karchie@npg.wustl.edu>
@@ -32,7 +33,7 @@ public class FileRootRemapperTest {
   };
   
   /**
-   * Test method for {@link org.nrg.dcm.edit.FileRootRemapper#FileRootRemapper(java.io.File, java.util.Collection)}.
+   * Test method for {@link org.nrg.dcm.io.FileRootRemapper#FileRootRemapper(java.io.File, java.util.Collection)}.
    */
   @Test
   public final void testFileRootRemapper() {
@@ -52,7 +53,7 @@ public class FileRootRemapperTest {
   }
 
   /**
-   * Test method for {@link org.nrg.dcm.edit.FileRootRemapper#toString()}.
+   * Test method for {@link org.nrg.dcm.io.FileRootRemapper#toString()}.
    */
   @Test
   public final void testToString() {
@@ -60,7 +61,7 @@ public class FileRootRemapperTest {
   }
 
   /**
-   * Test method for {@link org.nrg.dcm.edit.FileRootRemapper#remap(java.io.File)}.
+   * Test method for {@link org.nrg.dcm.io.FileRootRemapper#remap(java.io.File)}.
    */
   @Test
   public final void testRemap() throws IOException {

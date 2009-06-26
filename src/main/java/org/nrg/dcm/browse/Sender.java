@@ -26,6 +26,7 @@ import org.nrg.dcm.CStoreException;
 import org.nrg.dcm.DicomSender;
 import org.nrg.dcm.edit.StatementList;
 
+@Deprecated
 final class Sender extends Exporter {
   private static final String MAKE_CONN_MSG = "Making network connection";
   private static final String AE_TITLE = "DicomBrowser";

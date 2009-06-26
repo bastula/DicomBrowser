@@ -1,6 +1,5 @@
 /**
- * $Id: SwingProgressMonitor.java,v 1.2 2007/01/23 18:50:47 karchie Exp $
- * Copyright (c) 2006 Washington University
+ * Copyright (c) 2006-2009 Washington University
  */
 package org.nrg.dcm.browse;
 
@@ -11,6 +10,7 @@ import javax.swing.ProgressMonitor;
 import javax.swing.SwingUtilities;
 
 import org.nrg.dcm.ProgressMonitorI;
+import org.nrg.util.EditProgressMonitor;
 
 /**
  * Swing ProgressMonitor implementing ProgressMonitorI interface
@@ -18,7 +18,7 @@ import org.nrg.dcm.ProgressMonitorI;
  * @author Kevin A. Archie <karchie@npg.wustl.edu>
  */
 public final class SwingProgressMonitor implements
-ProgressMonitorI {
+ProgressMonitorI,EditProgressMonitor {
   final ProgressMonitor pm;
 
   private static abstract class ReturnRunnable<T> implements Runnable {

@@ -63,7 +63,7 @@
     <dependency>
       <groupId>org.nrg</groupId>
       <artifactId>DicomEdit</artifactId>
-      <version>1.1</version>
+      <version>1.2-SNAPSHOT</version>
     </dependency>
     <dependency>
       <!-- Apple library for Mac-specific GUI -->
