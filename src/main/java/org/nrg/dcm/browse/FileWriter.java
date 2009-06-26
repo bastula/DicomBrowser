@@ -24,6 +24,7 @@ import org.nrg.dcm.edit.StatementList;
  * @author Kevin A. Archie <karchie@npg.wustl.edu>
  *
  */
+@Deprecated
 abstract class FileWriter extends Exporter {
   private static final String AE_TITLE = "DicomBrowser";
 
@@ -44,14 +45,15 @@ abstract class FileWriter extends Exporter {
   }
   
   abstract File getDestFile(File f) throws IOException;
-
+  
   /* (non-Javadoc)
    * @see org.nrg.dcm.browse.Exporter#process(java.io.File, org.dcm4che2.data.DicomObject)
    */
   @Override
   final void process(final File f, final DicomObject o) throws IOException,CancelException {
-    if (pm != null)
+    if (pm != null) {
       pm.setNote(f.getPath());
+    }
 
     final DicomObject orig = read(f);
     final String cuid = orig.getString(Tag.MediaStorageSOPClassUID);

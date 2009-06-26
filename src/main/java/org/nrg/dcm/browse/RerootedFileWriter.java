@@ -9,13 +9,14 @@ import java.util.Collection;
 
 import org.apache.log4j.Logger;
 import org.nrg.dcm.ProgressMonitorI;
-import org.nrg.dcm.edit.FileRootRemapper;
 import org.nrg.dcm.edit.StatementList;
+import org.nrg.dcm.io.FileRootRemapper;
 
 /**
  * Writes modified files to a new hierarchy under a new root
  * @author Kevin A. Archie <karchie@npg.wustl.edu>
  */
+@Deprecated
 public class RerootedFileWriter extends FileWriter {
   private final Logger log = Logger.getLogger(RerootedFileWriter.class);
   private final FileRootRemapper remapper;
