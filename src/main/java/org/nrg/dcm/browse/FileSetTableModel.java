@@ -640,8 +640,8 @@ implements TreeSelectionListener {
      * @param aeTitle DICOM Application Entity Name of the remote host
      * @param allFiles true if all files in the file set should be sent
      */
-    void send(final String host, final String port, final String aeTitle,
-	    final boolean isTLS, final boolean allFiles) {
+    void send(final String host, final String port, final String remAETitle,
+	    final boolean isTLS, final String locAETitle, final boolean allFiles) {
 	try {
 	    final Set<File> files;
 	    final TransferCapability[] tcs;
@@ -663,7 +663,7 @@ implements TreeSelectionListener {
 		}
 	    }
 
-	    final DicomObjectExporter exporter = new CStoreExporter(host, port, isTLS, aeTitle, tcs);
+	    final DicomObjectExporter exporter = new CStoreExporter(host, port, isTLS, remAETitle, locAETitle, tcs);
 	    final EditProgressMonitor pm = SwingProgressMonitor.getMonitor(browser.getFrame(),
 		    rsrcb.getString(SENDING_FILES), "", 0, files.size());
 

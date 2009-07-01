@@ -21,11 +21,12 @@ implements ProgressMonitorI,EditProgressMonitor {
   private int min = 0, max = 0, lastReport = 0;
   private int reportCutoff = 200, reportIntervalCoarse = 100, reportIntervalFine = 20;
   
-  public StreamProgressMonitor(final PrintStream os, final String desc, final String startNote) {
+  public StreamProgressMonitor(final PrintStream os, final String desc, final String startNote, int max) {
     this.os = os;
     this.desc = desc;
     this.format = desc + " %s (%d/%d)" + LINE_SEPARATOR;
     this.note = this.startNote = startNote;
+    this.max = max;
    }
   
   public void setReportIntervals(final int cutoff, final int coarse, final int fine) {

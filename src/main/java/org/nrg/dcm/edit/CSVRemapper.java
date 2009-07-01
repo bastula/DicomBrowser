@@ -24,8 +24,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import java_cup.runtime.Symbol;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -192,7 +190,7 @@ public final class CSVRemapper {
     private final UIDGenerator uidGenerator;
     private final Collection<RemapColumn> remaps;
     private final Map<String,Map<Integer,Integer>> selectionKeysToCols;
-    private final Collection<Statement> globalStatements = new ArrayList<Statement>();
+    private final StatementList globalStatements = new StatementArrayList();
     private final PrintStream messages = System.err;
 
     public CSVRemapper(final File configFile, final String uidRoot, final URL uidRootServer)
@@ -303,12 +301,12 @@ public final class CSVRemapper {
 	return new Constraint(new ConstraintConjunction(conditions), dicomFiles);
     }
 
-    public void apply(final File remapSpreadsheet, final URI out, final Collection<File> roots)
+    public Map<?,?> apply(final File remapSpreadsheet, final URI out, final Collection<File> roots)
     throws IOException,AttributeException,InvalidRemapsException,SQLException {
-	final StatementList statements = new StatementArrayList();
+	final StatementList statements = new StatementArrayList(globalStatements);
 
 	final FileSet fs = new FileSet(roots.toArray(new File[0]), false,
-		new StreamProgressMonitor(messages, "Reading", "source DICOM"));
+		new StreamProgressMonitor(messages, "Reading", "source DICOM", roots.size()));
 	final Collection<File> files = fs.getDataFiles();
 
 	if (null != remapSpreadsheet) {
@@ -335,19 +333,21 @@ public final class CSVRemapper {
 	if ("file".equals(dest.getScheme())) {
 	    exporter = new NewRootFileExporter(AE_TITLE, new File(dest), roots);
 	} else if ("dicom".equals(dest.getScheme())) {
-	    final String destAETitle = dest.getUserInfo();
+	    final String locAETitle = dest.getUserInfo();
 	    final String destHost = dest.getHost();
 	    final int destPort = -1 == dest.getPort() ? DICOM_DEFAULT_PORT : dest.getPort();
-	    exporter = new CStoreExporter(destHost, Integer.toString(destPort), false, destAETitle,
+	    final String destAETitle = dest.getPath().replaceAll("/", "");
+	    exporter = new CStoreExporter(destHost, Integer.toString(destPort), false,
+		    destAETitle, locAETitle,
 		    fs.getTransferCapabilities(TransferCapability.SCU));
-	    throw new UnsupportedOperationException("DICOM URIs not yet supported");
 	} else {
 	    throw new UnsupportedOperationException("no exporter defined for URI scheme " + out.getScheme());
 	}
 
 	final BatchExporter batch = new BatchExporter(exporter, statements, files);
-	batch.setProgressMonitor(new StreamProgressMonitor(messages, "Processing", "modified DICOM"), 0);
+	batch.setProgressMonitor(new StreamProgressMonitor(messages, "Processing", "modified DICOM", files.size()), 0);
 	batch.run();
+	return batch.getFailures();
     }
 
     public void includeStatements(final File dasFile) throws IOException {
@@ -361,8 +361,7 @@ public final class CSVRemapper {
 	    final EditDCMLex scanner = new EditDCMLex(in);
 	    final EditDCMCup parser = new EditDCMCup(scanner);
 	    parser.setGenerator("UID", uidGenerator);
-	    final Symbol root = parser.parse();
-	    globalStatements.add((Statement)root.value);
+	    globalStatements.add((StatementList)(parser.parse().value));
 	} catch (IOException e) {
 	    throw e;
 	} catch (Exception e) {
@@ -474,6 +473,12 @@ public final class CSVRemapper {
 
 	final String remapCSVPath = cli.getOptionValue(valuesOpt.getOpt());
 	final File remapCSV = null == remapCSVPath ? null : new File(remapCSVPath);
-	remapper.apply(remapCSV, out, infiles);
+	final Map<?,?> failures = remapper.apply(remapCSV, out, infiles);
+	if (!failures.isEmpty()) {
+	    System.err.println("Output failed for some objects:");
+	    for (final Map.Entry<?,?> me : failures.entrySet()) {
+		System.err.println(me.getKey() + ": " + me.getValue());
+	    }
+	}
     }
 }
