@@ -26,5 +26,19 @@
 			<lineEnding>unix</lineEnding>
 			<fileMode>0755</fileMode>
 		</file>
+		<file>
+			<source>src/main/bin/DicomRemap.sh</source>
+			<destName>DicomRemap</destName>
+			<outputDirectory>bin</outputDirectory>
+			<lineEnding>unix</lineEnding>
+			<fileMode>0755</fileMode>
+		</file>
+		<file>
+			<source>src/main/bin/DicomRemap.sh</source>
+			<destName>DicomSummarize</destName>
+			<outputDirectory>bin</outputDirectory>
+			<lineEnding>unix</lineEnding>
+			<fileMode>0755</fileMode>
+		</file>		
 	</files>
 </assembly>
