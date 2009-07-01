@@ -665,7 +665,7 @@ implements TreeSelectionListener {
 
 	    final DicomObjectExporter exporter = new CStoreExporter(host, port, isTLS, aeTitle, tcs);
 	    final EditProgressMonitor pm = SwingProgressMonitor.getMonitor(browser.getFrame(),
-		    rsrcb.getString(WRITING_FILES), "", 0, files.size());
+		    rsrcb.getString(SENDING_FILES), "", 0, files.size());
 
 	    final BatchExporter batch = new BatchExporter(exporter, buildStatements(), files);
 	    batch.setProgressMonitor(pm, 0);

@@ -33,11 +33,13 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 import org.apache.log4j.Logger;
+import org.dcm4che2.net.TransferCapability;
 import org.dcm4che2.util.TagUtils;
 import org.dom4j.DocumentException;
 import org.nrg.dcm.FileSet;
 import org.nrg.dcm.browse.DicomBrowser;
 import org.nrg.dcm.io.BatchExporter;
+import org.nrg.dcm.io.CStoreExporter;
 import org.nrg.dcm.io.DicomObjectExporter;
 import org.nrg.dcm.io.NewRootFileExporter;
 
@@ -49,6 +51,7 @@ import com.Ostermiller.util.CSVParser;
  *
  */
 public final class CSVRemapper {
+    private static final int DICOM_DEFAULT_PORT = 104;
     private static final String AE_TITLE = "DicomRemapper";
 
     private final static class RemapColumn {
@@ -178,9 +181,7 @@ public final class CSVRemapper {
 		sb.append("The following remaps were assigned multiple values:");
 		sb.append(LINE_SEPARATOR);
 		for (final Map.Entry<RemapWithContext,Collection<String>> e : overspecified.entrySet()) {
-		    sb.append(e.getKey());
-		    sb.append(" : ");
-		    sb.append(e.getValue());
+		    sb.append(e.getKey()).append(" : ").append(e.getValue());
 		    sb.append(LINE_SEPARATOR);
 		}
 	    }
@@ -191,7 +192,7 @@ public final class CSVRemapper {
     private final UIDGenerator uidGenerator;
     private final Collection<RemapColumn> remaps;
     private final Map<String,Map<Integer,Integer>> selectionKeysToCols;
-    private final Collection<Statement> globalStatements = new LinkedList<Statement>();
+    private final Collection<Statement> globalStatements = new ArrayList<Statement>();
     private final PrintStream messages = System.err;
 
     public CSVRemapper(final File configFile, final String uidRoot, final URL uidRootServer)
@@ -203,7 +204,7 @@ public final class CSVRemapper {
 
 	// Collect all remappings, and all levels for which a remapping is defined
 	final Collection<String> levels = new HashSet<String>();
-	remaps = new LinkedList<RemapColumn>();
+	remaps = new ArrayList<RemapColumn>();
 	for (int i = 0; i < columns.size(); i++) {
 	    final DicomTableEntry col = columns.get(i);
 	    if (col.isSubstitution()) {
@@ -330,10 +331,15 @@ public final class CSVRemapper {
 
 	final DicomObjectExporter exporter;
 
-	if (isFileURI(out)) {
-	    // TODO: if URI is not absolute, resolve it
-	    exporter = new NewRootFileExporter(AE_TITLE, new File(out), roots);
-	} else if ("dicom".equals(out.getScheme())) {
+	final URI dest = out.isAbsolute() ? out : out.resolve(System.getProperty("user.dir"));
+	if ("file".equals(dest.getScheme())) {
+	    exporter = new NewRootFileExporter(AE_TITLE, new File(dest), roots);
+	} else if ("dicom".equals(dest.getScheme())) {
+	    final String destAETitle = dest.getUserInfo();
+	    final String destHost = dest.getHost();
+	    final int destPort = -1 == dest.getPort() ? DICOM_DEFAULT_PORT : dest.getPort();
+	    exporter = new CStoreExporter(destHost, Integer.toString(destPort), false, destAETitle,
+		    fs.getTransferCapabilities(TransferCapability.SCU));
 	    throw new UnsupportedOperationException("DICOM URIs not yet supported");
 	} else {
 	    throw new UnsupportedOperationException("no exporter defined for URI scheme " + out.getScheme());
@@ -342,10 +348,6 @@ public final class CSVRemapper {
 	final BatchExporter batch = new BatchExporter(exporter, statements, files);
 	batch.setProgressMonitor(new StreamProgressMonitor(messages, "Processing", "modified DICOM"), 0);
 	batch.run();
-    }
-
-    private static boolean isFileURI(final URI uri) {
-	return !uri.isAbsolute() && !"file".equals(uri.getScheme());
     }
 
     public void includeStatements(final File dasFile) throws IOException {
@@ -464,18 +466,8 @@ public final class CSVRemapper {
 	}
 
 	final URI out = new URI(cli.getOptionValue(outputOpt.getOpt()));
-	if (isFileURI(out)) {
-	    final File outDir = new File(cli.getOptionValue(outputOpt.getOpt()));
-	    outDir.mkdirs();
-	    if (!outDir.isDirectory()) {
-		System.err.println("output path " + outDir + " is not a directory");
-		System.exit(-2);
-	    }
-	} else {
-	    throw new UnsupportedOperationException("only files so far");
-	}
 
-	final Collection<File> infiles = new LinkedList<File>();
+	final Collection<File> infiles = new ArrayList<File>();
 	for (final String path : cli.getArgs()) {
 	    infiles.add(new File(path.toString()));
 	}
