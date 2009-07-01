@@ -158,7 +158,7 @@ public class CSVSummaryBuilder {
     final File configFile = cli.hasOption(configXMLOpt.getOpt()) ? new File(cli.getOptionValue(configXMLOpt.getOpt())) : null;
     final CSVSummaryBuilder builder = new CSVSummaryBuilder(configFile);
     builder.run(new CSVPrinter(out),
-        new StreamProgressMonitor(System.err, "Reading", "DICOM files"),
+        new StreamProgressMonitor(System.err, "Reading", "DICOM files", files.size()),
         files.toArray(new File[0]));
   }
 }
