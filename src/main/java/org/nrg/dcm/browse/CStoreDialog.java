@@ -49,7 +49,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
     private JLabel hostLabel = null;
 
     private JLabel localAELabel = null;
-    
+
     private JLabel remoteAELabel = null;
 
     private JComboBox whichFiles = null;
@@ -61,7 +61,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
     private JComboBox hostComboBox = null;
 
     private JComboBox remoteAEComboBox = null;
-    
+
     private JComboBox localAEComboBox = null;
 
     private FileSetTableModel model;
@@ -90,22 +90,22 @@ final class CStoreDialog extends JDialog implements ActionListener {
 	}
 
 	private final Pattern OLD_ADDR_PATTERN = Pattern.compile("([^\\:]+)\\:([^\\:]+)\\:([^\\:]+)");
-	private final Pattern ADDR_PATTERN = Pattern.compile("([^\\#]+)\\#([^\\:]+)\\:([^\\:]+)\\:([^\\:]+)");
-	
+	private final Pattern ADDR_PATTERN = Pattern.compile("([^#]+)#([^\\:]+)\\:([^\\:]+)\\:([^\\:]+)");
+
 	public AEAddr(final String desc) {
-	    final Matcher oldMatcher = OLD_ADDR_PATTERN.matcher(desc);
-	    if (oldMatcher.matches()) {
-		this.host = oldMatcher.group(1);
-		this.port = Integer.parseInt(oldMatcher.group(2));
-		this.remoteAE = oldMatcher.group(3);
-		this.localAE = DEFAULT_AE_TITLE;
+	    final Matcher matcher = ADDR_PATTERN.matcher(desc);
+	    if (matcher.matches()) {
+		this.localAE = matcher.group(1);
+		this.host = matcher.group(2);
+		this.port = Integer.parseInt(matcher.group(3));
+		this.remoteAE = matcher.group(4);
 	    } else {
-		final Matcher matcher = ADDR_PATTERN.matcher(desc);
-		if (matcher.matches()) {
-		    this.localAE = matcher.group(1);
-		    this.host = matcher.group(2);
-		    this.port = Integer.parseInt(matcher.group(3));
-		    this.remoteAE = matcher.group(4);
+		final Matcher oldMatcher = OLD_ADDR_PATTERN.matcher(desc);
+		if (oldMatcher.matches()) {
+		    this.host = oldMatcher.group(1);
+		    this.port = Integer.parseInt(oldMatcher.group(2));
+		    this.remoteAE = oldMatcher.group(3);
+		    this.localAE = DEFAULT_AE_TITLE;
 		} else {
 		    throw new RuntimeException("Uninterpretable AE address entry " + desc);
 		}
@@ -182,13 +182,22 @@ final class CStoreDialog extends JDialog implements ActionListener {
 	    return ports.toArray(new String[0]);
 	}
 
-	String[] getTitles() {
+	String[] getRemoteTitles() {
 	    final Collection<String> aets = new LinkedHashSet<String>();
 	    for (final AEAddr a : this) {
 		aets.add(a.remoteAE);
 	    }
 	    return aets.toArray(new String[0]);
 	}
+	
+	String[] getLocalTitles() {
+	    final Collection<String> aets = new LinkedHashSet<String>();
+	    for (final AEAddr a : this) {
+		aets.add(a.localAE);
+	    }
+	    return aets.toArray(new String[0]);
+	}
+
 
 	@Override
 	public AEAddr push(final AEAddr item) {
@@ -249,7 +258,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
 	    localAELabel.setText("Local AE title:");
 	    localAELabel.setHorizontalAlignment(SwingConstants.RIGHT);
 	    localAELabel.setHorizontalTextPosition(SwingConstants.RIGHT);
-	    
+
 	    remoteAELabel = new JLabel();
 	    remoteAELabel.setText("Remote AE title:");
 	    remoteAELabel.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -268,7 +277,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
 	    jContentPane = new JPanel(new GridBagLayout());
 
 	    final Insets labelInsets = new Insets(4, 8, 0, 0);
-	    
+
 	    // Host label
 	    final GridBagConstraints hostLabelC9s = new GridBagConstraints();
 	    hostLabelC9s.gridy = 0;
@@ -297,13 +306,13 @@ final class CStoreDialog extends JDialog implements ActionListener {
 	    final GridBagConstraints portC9s = new GridBagConstraints();
 	    portC9s.gridy = 1;
 	    portC9s.gridx = 1;
-//	    portC9s.ipadx = 20;
-//	    portC9s.ipady = -1;
+	    //	    portC9s.ipadx = 20;
+	    //	    portC9s.ipady = -1;
 	    portC9s.weightx = 1.0;
-//	    portC9s.insets = new Insets(8, 9, 7, 6);
+	    //	    portC9s.insets = new Insets(8, 9, 7, 6);
 	    portC9s.anchor = GridBagConstraints.LINE_START;
 	    jContentPane.add(getPortComboBox(), portC9s);
-	    
+
 	    // Local AE title label
 	    final GridBagConstraints localAELabelC9s = new GridBagConstraints();
 	    localAELabelC9s.gridy = 3;
@@ -311,28 +320,28 @@ final class CStoreDialog extends JDialog implements ActionListener {
 	    localAELabelC9s.insets = labelInsets;
 	    localAELabelC9s.anchor = GridBagConstraints.LINE_END;
 	    jContentPane.add(localAELabel, localAELabelC9s);
-	    
+
 	    final GridBagConstraints localAEC9s = new GridBagConstraints();
 	    localAEC9s.gridy = 3;
 	    localAEC9s.gridx = 1;
 	    localAEC9s.weightx = 1;
 	    localAEC9s.anchor = GridBagConstraints.LINE_START;
 	    jContentPane.add(getLocalAEComboBox(), localAEC9s);
-	    
+
 	    final GridBagConstraints remoteAELabelC9s = new GridBagConstraints();
 	    remoteAELabelC9s.gridy = 2;
 	    remoteAELabelC9s.gridx = 0;
 	    remoteAELabelC9s.anchor = GridBagConstraints.LINE_END;
 	    remoteAELabelC9s.insets = labelInsets;
 	    jContentPane.add(remoteAELabel, remoteAELabelC9s);
-	    
+
 	    final GridBagConstraints remoteAEC9s = new GridBagConstraints();
 	    remoteAEC9s.gridy = 2;
 	    remoteAEC9s.gridx = 1;
 	    remoteAEC9s.weightx = 1;
 	    remoteAEC9s.anchor = GridBagConstraints.LINE_START;
 	    jContentPane.add(getRemoteAEComboBox(), remoteAEC9s);
-	    
+
 	    // Send which files selector
 	    final GridBagConstraints whichFilesC9s = new GridBagConstraints();
 	    whichFilesC9s.gridwidth = 2;
@@ -340,17 +349,17 @@ final class CStoreDialog extends JDialog implements ActionListener {
 	    whichFilesC9s.gridy = 4;
 	    whichFilesC9s.weightx = 1.0;
 	    jContentPane.add(getWhichFiles(), whichFilesC9s);
-	    
+
 	    final GridBagConstraints tlsC9s = new GridBagConstraints();
 	    tlsC9s.gridx = 0;
 	    tlsC9s.gridy = 5;
 	    tlsC9s.gridwidth = 2;
-	    
+
 	    final JPanel tlsPanel = new JPanel();
 	    tlsPanel.add(tlsLabel);
 	    tlsPanel.add(getUseTLSCheckBox());
 	    jContentPane.add(tlsPanel, tlsC9s);
-	    
+
 	    // Send button
 	    GridBagConstraints sendC9s = new GridBagConstraints();
 	    sendC9s.gridy = 6;
@@ -429,16 +438,16 @@ final class CStoreDialog extends JDialog implements ActionListener {
      */
     private JComboBox getRemoteAEComboBox() {
 	if (remoteAEComboBox == null) {
-	    remoteAEComboBox = new JComboBox(history.getTitles());
+	    remoteAEComboBox = new JComboBox(history.getRemoteTitles());
 	    remoteAEComboBox.setEditable(true);
 	    remoteAEComboBox.setMinimumSize(new Dimension(120,0));
 	}
 	return remoteAEComboBox;
     }
-    
+
     private JComboBox getLocalAEComboBox() {
 	if (null == localAEComboBox) {
-	    localAEComboBox = new JComboBox(history.getTitles());
+	    localAEComboBox = new JComboBox(history.getLocalTitles());
 	    localAEComboBox.setEditable(true);
 	    localAEComboBox.setMinimumSize(new Dimension(120, 0));
 	}
