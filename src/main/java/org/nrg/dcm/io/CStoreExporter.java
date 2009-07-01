@@ -27,7 +27,7 @@ import org.nrg.dcm.DicomSender;
  *
  */
 public class CStoreExporter implements DicomObjectExporter {
-    private static final String DEFAULT_AE_TITLE = "org.nrg.dcm.io.CStoreExporter";
+    private static final String DEFAULT_AE_TITLE = "NRG-Exporter";
     private static final String PROTOCOL_TLS = "TLS";
 
     private final static TrustManager[] yesManagers = new TrustManager[] {
@@ -45,7 +45,7 @@ public class CStoreExporter implements DicomObjectExporter {
     
     public CStoreExporter(final String host, final String port,
 	    final boolean isTLS, final String aeTitle, final TransferCapability[] tcs) {
-	this(buildSender(host, port, aeTitle, DEFAULT_AE_TITLE, tcs, TlsType.AES, false, yesManagers));
+	this(buildSender(host, port, aeTitle, DEFAULT_AE_TITLE, tcs, isTLS ? TlsType.AES : null, false, yesManagers));
     }
 
     private static DicomSender buildSender(final String remHost, final String remPort,

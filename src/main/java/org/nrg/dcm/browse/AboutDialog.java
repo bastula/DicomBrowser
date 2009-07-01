@@ -35,9 +35,7 @@ final class AboutDialog extends JDialog {
 		  System.err.println("Unable to load properties: " + e.getMessage());
 	  }
 	  TITLE = props.getProperty("application.name");
-	  VERSION = String.format("%s (%s)",
-		  props.getProperty("application.version"),
-		  "$Rev$");
+	  VERSION = props.getProperty("application.version");
   }
 
   AboutDialog(final Frame owner, final String title) {
