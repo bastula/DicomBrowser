@@ -53,6 +53,7 @@ import org.nrg.dcm.edit.StatementList;
 import org.nrg.dcm.io.AdjacentDirFileExporter;
 import org.nrg.dcm.io.AdjacentFileExporter;
 import org.nrg.dcm.io.BatchExporter;
+import org.nrg.dcm.io.CStoreExporter;
 import org.nrg.dcm.io.DicomObjectExporter;
 import org.nrg.dcm.io.NewRootFileExporter;
 import org.nrg.dcm.io.OverwriteFileExporter;
@@ -110,7 +111,7 @@ implements TreeSelectionListener {
 
     // TODO: remove this
     // name of directory where files that couldn't be matched to a root are saved
-//    private static final String LOST_AND_FOUND_DIR = "lost-and-found";
+    //    private static final String LOST_AND_FOUND_DIR = "lost-and-found";
 
     private static final int nCols = 4;
     public static final int ACTION_COLUMN = 2;
@@ -334,10 +335,11 @@ implements TreeSelectionListener {
 		final Set<Operation> ops = new HashSet<Operation>();
 		synchronized(selectedFiles) {
 		    for (File file : selectedFiles) {
-			if (allOps.containsKey(tag))
+			if (allOps.containsKey(tag)) {
 			    ops.add(allOps.get(tag).get(file));  // null here = KEEP
-			else
+			} else {
 			    ops.add(null);       // implicit KEEP
+			}
 			if (ops.size() > 1)
 			    return OperationFactory.getMultipleName();
 		    }
@@ -365,8 +367,9 @@ implements TreeSelectionListener {
 	} else if (o instanceof String) {
 	    // If this attribute has a single value over the fileSelection,
 	    // and it hasn't changed, return without doing anything.
-	    if (contents[row].size() == 1 && contents[row].toString().equals(o))
+	    if (contents[row].size() == 1 && contents[row].toString().equals(o)) {
 		return;
+	    }
 
 	    final String val = (String)o;
 	    doOperation(OperationFactory.getInstance(OperationFactory.ASSIGN,
@@ -379,8 +382,9 @@ implements TreeSelectionListener {
 	    }
 
 	} else if (o instanceof MultiValueAttribute) { // only on canceled edit
-	    if (!contents[row].equals(o))
+	    if (!contents[row].equals(o)) {
 		throw new IllegalArgumentException("setValueAt() given unknown attribute: " + o);
+	    }
 	} else {
 	    throw new IllegalArgumentException("setValueAt() given unknown object type: " + o.getClass().getName());
 	}
@@ -456,12 +460,13 @@ implements TreeSelectionListener {
      * @param ops Operations to be applied
      * @return Map of replaced Operations and the File to which they applied.
      */
-    private Map<File,Operation> addOperation(final Operation op, File...files) {
+    private Map<File,Operation> addOperation(final Operation op, final File...files) {
 	final int tag = op.getTag();
 	final Map<File,Operation> replaced = new HashMap<File,Operation>();
 	for (final File file : files) {
-	    if (!allOps.containsKey(tag))
+	    if (!allOps.containsKey(tag)) {
 		allOps.put(tag, new HashMap<File,Operation>());
+	    }
 	    if (allOps.get(tag).containsKey(file)) {
 		replaced.put(file, allOps.get(tag).get(file));
 	    }
@@ -635,17 +640,19 @@ implements TreeSelectionListener {
      * @param aeTitle DICOM Application Entity Name of the remote host
      * @param allFiles true if all files in the file set should be sent
      */
-    synchronized void send(final String host, final String port, final String aeTitle,
+    void send(final String host, final String port, final String aeTitle,
 	    final boolean isTLS, final boolean allFiles) {
 	try {
 	    final Set<File> files;
 	    final TransferCapability[] tcs;
-	    if (allFiles) {
-		files = fs.getDataFiles();
-		tcs = fs.getTransferCapabilities(TransferCapability.SCU);
-	    } else {
-		files = selectedFiles;
-		tcs = fs.getTransferCapabilities(TransferCapability.SCU, selectedFiles);
+	    synchronized(this) {
+		if (allFiles) {
+		    files = fs.getDataFiles();
+		    tcs = fs.getTransferCapabilities(TransferCapability.SCU);
+		} else {
+		    files = selectedFiles;
+		    tcs = fs.getTransferCapabilities(TransferCapability.SCU, selectedFiles);
+		}
 	    }
 
 	    if (logger.isDebugEnabled()) {
@@ -656,12 +663,13 @@ implements TreeSelectionListener {
 		}
 	    }
 
-	    final ProgressMonitor pm = new ProgressMonitor(browser.getFrame(),
-		    rsrcb.getString(SENDING_FILES), "", 0, files.size());
-	    final Exporter sender = new Sender(host, port, isTLS, aeTitle, tcs, files, buildStatements(), pm);
+	    final DicomObjectExporter exporter = new CStoreExporter(host, port, isTLS, aeTitle, tcs);
+	    final EditProgressMonitor pm = SwingProgressMonitor.getMonitor(browser.getFrame(),
+		    rsrcb.getString(WRITING_FILES), "", 0, files.size());
 
-	    // Lots to be done, some of it slow; spin it off as a separate thread.
-	    executor.execute(sender);
+	    final BatchExporter batch = new BatchExporter(exporter, buildStatements(), files);
+	    batch.setProgressMonitor(pm, 0);
+	    executor.execute(batch);
 	} catch (SQLException e) {
 	    logger.error("unable to get data files", e);
 	    JOptionPane.showMessageDialog(browser.getFrame(),      // TODO: localize
@@ -673,7 +681,7 @@ implements TreeSelectionListener {
     }
 
 
-    void export(final DicomObjectExporter exporter, final boolean allFiles) {
+    private void export(final DicomObjectExporter exporter, final boolean allFiles) {
 	final SortedSet<File> files;
 	try {
 	    files = new TreeSet<File>(allFiles ? fs.getDataFiles() : selectedFiles);
@@ -719,113 +727,8 @@ implements TreeSelectionListener {
 	}
 	export(exporter, allFiles);
     }
-    
-//    synchronized void saveInNewRoot(final String rootpath, final boolean allFiles) {
-//	final File newRoot = new File(rootpath);
-//	newRoot.mkdir();
-//	if (!newRoot.exists() && newRoot.isDirectory()) {
-//	    JOptionPane.showMessageDialog(browser.getFrame(),      // TODO: localize
-//		    "Unable to create new root directory " + rootpath, "Export failed",
-//		    JOptionPane.ERROR_MESSAGE);
-//	    return;
-//	}
-//
-//	final Set<File> rawRoots = fs.getRoots();
-//	final Map<String,File> roots = new HashMap<String,File>();
-//
-//	// this is complicated.  doesn't work yet, and the approach below won't quite work.
-//
-//	// first build a set of canonical roots:
-//	// strip out any redundant roots (i.e., contained by others)
-//	rawRootLoop : for (final File root : rawRoots) {
-//	    if (root == null) continue;
-//	    String path;
-//	    try {
-//		path = root.getCanonicalPath();
-//	    } catch (IOException e) {
-//		logger.info("unable to get canonical path for fileset root " + root);
-//		continue;
-//	    }
-//	    for (Iterator<String> pi = roots.keySet().iterator(); pi.hasNext(); ) {
-//		final String opath = pi.next();
-//		if (path.startsWith(opath))
-//		    continue rawRootLoop;
-//		if (opath.startsWith(path))
-//		    pi.remove();
-//	    }
-//	    roots.put(path, root);
-//	}
-//
-//	// build map from each file to its root
-//	final Set<File> files;
-//	try {
-//	    files = allFiles ? fs.getDataFiles() : new HashSet<File>(selectedFiles);
-//	} catch (SQLException e) {
-//	    logger.error("unable to get data files", e);
-//	    JOptionPane.showMessageDialog(browser.getFrame(),      // TODO: localize
-//		    "Unable to retrieve data files from database: " + e.getMessage(),
-//		    "Export failed",
-//		    JOptionPane.ERROR_MESSAGE);
-//	    return;
-//	}
-//	final Map<File,File> fileroots = new HashMap<File,File>();
-//	for (final File f : files) {
-//	    final String path;
-//	    try {
-//		path = f.getCanonicalPath();
-//	    } catch (IOException e) {
-//		logger.info("unable to get canonical path for file " + f);
-//		continue;
-//	    }
-//	    for (final Map.Entry<String,File> e : roots.entrySet()) {
-//		if (path.startsWith(e.getKey()))
-//		    fileroots.put(f, e.getValue());
-//	    }
-//	}
-//
-//	// files that couldn't be matched to a root go into the lost-and-found
-//	files.removeAll(fileroots.keySet());
-//	if (!files.isEmpty()) {
-//	    final File lostAndFound = new File(newRoot, LOST_AND_FOUND_DIR);
-//	    lostAndFound.mkdirs();
-//	    for (final File f : files)
-//		fileroots.put(f, lostAndFound);
-//	    files.clear();
-//	}
-//
-//	final ProgressMonitorI pm = SwingProgressMonitor.getMonitor(browser.getFrame(),
-//		rsrcb.getString(WRITING_FILES), "", 0, fileroots.size());
-//
-//	final String newRootPath = newRoot.getPath();
-//	final Exporter writer = new FileWriter(fileroots.keySet(), buildStatements(), pm) {
-//	    @Override
-//	    File getDestFile(final File f) throws IOException {
-//		final File origRoot = fileroots.get(f);
-//		final String rootName = origRoot.getName();
-//		final String origRootPath = origRoot.getCanonicalPath();
-//
-//		final File origParent = f.getParentFile();
-//		final String origParentPath = origParent.getCanonicalPath();
-//
-//		final String parentPath;
-//		if (origParentPath.startsWith(origRootPath)) {
-//		    final String relParentPath = origParentPath.substring(origRootPath.length());
-//		    parentPath = newRootPath + File.separator + rootName + File.separator + relParentPath;
-//		} else {
-//		    // root must be lost-and-found; just put it in a subdirectory
-//		    parentPath = origRootPath + File.separator + origParent.getName();
-//		}
-//
-//		final File parent = new File(parentPath);
-//		parent.mkdirs();
-//		return new File(parent, f.getName());
-//	    }
-//	};
-//
-//	executor.execute(writer);
-//    }
 
-
+ 
     void overwrite(final boolean allFiles) {
 	export(new OverwriteFileExporter(AE_TITLE), allFiles);
     }
