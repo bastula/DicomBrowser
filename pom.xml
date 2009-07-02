@@ -37,7 +37,46 @@
   <packaging>jar</packaging>
   <version>1.5-SNAPSHOT</version>
   <name>DicomBrowser</name>
+  <description>
+DicomBrowser is a GUI-based utility for viewing and modifying metadata
+in DICOM medical imaging files.  It is distinct from other DICOM
+viewers in that it focuses on the metadata instead of the image
+content, and is suited to operating on studies and series containing
+hundreds or thousands of image files rather than on individual images.
+  </description>
   <url>http://nrg.wustl.edu/projects/DICOM/DicomBrowser.jsp</url>
+  <scm>
+    <connection>scm:svn:http://nrg.wustl.edu/svn/dicom/DicomBrowser</connection>
+    <developerConnection>scm:svn:svn+ssh://nrg.wustl.edu/opt/svn/dicom/DicomBrowser</developerConnection>
+    <url>http://nrg.wustl.edu/svn/dicom/DicomBrowser</url>
+  </scm>
+  <organization>
+    <name>Washington University Neuroinformatics Research Group</name>
+    <url>http://nrg.wustl.edu</url>
+  </organization>
+  <developers>
+    <developer>
+      <id>karchie</id>
+      <name>Kevin A. Archie</name>
+      <email>karchie@npg.wustl.edu</email>
+      <organization>Washington University Neuroinformatics Research
+      Group</organization>
+      <organizationUrl>http://nrg.wustl.edu</organizationUrl>
+      <roles>
+	<role>Developer</role>
+      </roles>
+      <timezone>-6</timezone>
+    </developer>
+  </developers>
+  <issueManagement>
+    <system>FogBugz</system>
+    <url>http://nrg.wustl.edu/fogbugz</url>
+  </issueManagement>
+  <licenses>
+    <license>
+      <name>XNAT License</name>
+    </license>
+  </licenses>
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
