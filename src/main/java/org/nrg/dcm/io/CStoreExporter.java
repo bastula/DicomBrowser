@@ -27,6 +27,7 @@ import org.nrg.dcm.DicomSender;
  *
  */
 public class CStoreExporter implements DicomObjectExporter {
+  private static final String DEFAULT_AE_TITLE = "NRG C-STORE SCU";
     private static final String PROTOCOL_TLS = "TLS";
 
     private final static TrustManager[] yesManagers = new TrustManager[] {
@@ -63,7 +64,7 @@ public class CStoreExporter implements DicomObjectExporter {
 	}
 
 	final NetworkApplicationEntity localAE = new NetworkApplicationEntityBuilder()
-	.setAETitle(locAETitle)
+	.setAETitle(null == locAETitle ? DEFAULT_AE_TITLE : locAETitle)
 	.setTransferCapability(tcs)
 	.setNetworkConnection(lnc)
 	.build();
