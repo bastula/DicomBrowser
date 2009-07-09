@@ -1,0 +1,128 @@
+  -----
+  Performing batch anonymizations
+  -----
+  Kevin A. Archie <karchie@npg.wustl.edu>
+  -----
+  2009-07-08
+  -----
+
+ To perform a batch anonymization:
+
+ [[0]] Download and install the command-line tools:
+   {{http://nrg.wustl.edu/projects/DICOM/DicomBrowser-cli.html}}
+
+ [[1]] <(Optional)> Write an anonymization script for any simple
+   changes, such as deleting an attribute, or setting an attribute
+   value to either a fixed value or a simple function of other
+   attribute values in the same file.  The more changes you can
+   put into this anonymization script, the simpler will be the rest of
+   this process.
+
+   See {{http://nrg.wustl.edu/projects/DICOM/AnonScript.jsp}} for
+   detailed information about writing anonymization scripts.
+ 
+ [[2]] Write a remapping config file.  This is an XML file that
+   describes the spreadsheet that will be built from the data.  The
+   root element is <<<\<Columns\>>>>; each subelement describes either
+   one or two columns in the spreadsheet:
+
+----------------
+   <LEVEL>tag</LEVEL>
+----------------
+
+   where tag is the 32-bit DICOM tag for the attribute to be
+   displayed, expressed as two 16-bit numbers separated by a comma and
+   surrounded by parentheses, e.g., <<<(0008,0080)>>> for Institution
+   Name;
+
+   and <LEVEL> is one of <<<Global>>>, <<<Patient>>>, <<<Study>>>, or
+   <<<Series>>>, describing the highest domain over which the
+   attribute will have a single value: Patient ID, for example, should
+   be at the <<<Patient>>> level.
+
+   The <LEVEL> element shown above adds one column to the spreadsheet,
+   with column title equal to the name of the specified DICOM attribute,
+   and each entry in the column the original value of that attribute
+   in the DICOM files.
+
+   To allow an attribute value to be changed, add the <<<remap>>>
+   attribute:
+
+-----------------------
+   <LEVEL remap="Remap Column Name">tag</LEVEL>
+-----------------------
+
+   This element will add two columns to the spreadsheet: one showing
+   the original data values, as described above, and a new column with
+   the given column name, in which replacement values can be
+   specified.  The new values column will appear immediately to the
+   right of the original values column, unless the optional attribute
+   <<<append="true">>> is used, in which case the new values column
+   will be placed at the far right, after all the original values
+   columns.
+
+   See {{examples/test-config.xml}} for an example.
+
+
+ [[3]] Generate a spreadsheet from the data:
+
+-----------------------
+   DicomSummarize -c remap-config-file.xml -v remap.csv [directory-1 ...]
+-----------------------
+
+   where the arguments in brackets are a list of directories
+   containing the source DICOM data.  Remember this list of
+   directories, because you'll use it again in step 5.
+
+
+ [[4]] Edit the spreadsheet using your favorite CSV editor.  This
+   spreadsheet will contain all the columns you defined, plus some
+   additional columns needed to uniquely identify each patient, study,
+   and series.
+
+   Each new value (remap) column should be filled with values. In some
+   cases, some cells in the spreadsheet can be left blank: for a
+   Patient-level remap, one value must be specified for each patient;
+   if the spreadsheet contains multiple rows for each patient, the
+   column needs only be filled in one row for each patient.
+   Similarly, for a Study-level remap, the value need only be filled
+   once.
+
+  (This is a little complicated, but the remapper does some
+   consistency checking.  If you don't fill in a required cell, the
+   remapper will complain.  If you give, for example, a Patient-level
+   remap column multiple values for a single patient, the remapper
+   will complain.)
+
+
+ [[5]] Run the remapper:
+
+-----------------------
+   DicomRemapper -c remap-config-file.xml -o <path-to-output-directory> \
+       -v remap.csv [directory-1 ...]
+-----------------------
+       
+   where the remap config XML should be the same file you used in step
+   3, remap.csv is the spreadsheet generated in step 3 that you edited
+   in step 4, and the list of directories is the same list of source
+   directories from step 3.
+
+   If you're anonymizing many files, go get a cup of coffee, because
+   it will take a while.  If all goes well, the program will finish
+   quietly, and the output directory will be full of anonymized files.
+   If all doesn't go well, the program will print some error messages
+   providing clues as to what went wrong.
+
+   You can add an anonymization script to be applied at this stage by
+   using the -d option.  The first time you use a script to generate
+   new UIDs, you'll need a new UID root; the easiest way to get one is
+   to add <<<-s http://nrg.wustl.edu/UIDGen>>> to your DicomRemapper
+   command line. 
+
+
+ [[6]] Inspect the contents of the output directory to verify that
+   what you thought was going to happen happened.  There are many
+   ways to make mistakes along the way, and there may be bugs that I
+   haven't found yet.
+
+ []

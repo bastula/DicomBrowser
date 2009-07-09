@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src/main/java"/>
-	<classpathentry excluding="**/*.java" kind="src" path="src/main/resources"/>
-	<classpathentry kind="src" output="target/test-classes" path="src/test/java"/>
+	<classpathentry excluding="**/*.lex|**/*.cup" kind="src" path="src/main/java"/>
+	<classpathentry excluding="**/*.lex|**/*.java|**/*.cup" kind="src" path="src/main/resources"/>
+	<classpathentry excluding="**/*.lex|**/*.cup" kind="src" output="target/test-classes" path="src/test/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="var" path="M2_REPO/hsqldb/hsqldb/1.8.0.7/hsqldb-1.8.0.7.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/ostermiller/ostermillerutils/1.07/ostermillerutils-1.07.jar"/>

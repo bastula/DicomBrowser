@@ -1,0 +1,41 @@
+  ------
+  DicomRemap
+  ------
+  Kevin A. Archie <karchie@npg.wustl.edu>
+  ------
+  2009-07-08
+  ------
+
+DicomRemap
+
+ DicomRemap is a command-line utility that applies anonymization
+ scripts and spreadsheet-specified metadata modification to DICOM
+ data, then either saves the resulting data as new files or sends them
+ to a C-STORE SCP.  See {{batch-anon.html}} for detailed instructions.
+
+* Synopsis
+
+-----
+ DicomRemap [OPTIONS] [DIRECTORY] ...
+-----
+
+* Parameters
+
+ [-c <config.xml>, --config=<config.xml>] configuration XML file
+
+ [-d <script.das>, --script=<script.das>] script file(s) to be applied
+
+ [-v <values.csv>, --values=<values.csv>] CSV spreadsheet specifying
+   value mappings
+
+ [-o <dest>, --output=<dest>] target location for modified files
+
+ The destination argument can be either a file path (relative or
+ absolute), or a URI specifying a destination C-STORE SCP:
+
+ <<<dicom://>>>[<client-ae-title><<<@>>>]<host>[:<port>]<<</>>><server-ae-title>
+ [-r <uid>, --uid-root=<uid>] root UID from which new UIDs are constructed
+
+ [-s <url>, --uid-root-server=<url>] server from which new root UID
+   can be obtained
+

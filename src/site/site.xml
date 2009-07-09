@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="DicomBrowser">
+  <body>
+    <menu ref="reports"/>
+    <menu name="Command-line utilities">
+      <item name="Batch anonymization" href="/batch-anon.html"/>
+      <item name="DicomSummarize" href="/DicomSummarize.html"/>
+      <item name="DicomRemap" href="/DicomRemap.html"/>
+    </menu>
+  </body>
+</project>

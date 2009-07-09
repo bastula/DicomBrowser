@@ -1,0 +1,9 @@
+<Columns>
+  <Global remap="Fixed Institution Name">(0008,0080)</Global>
+  <Patient remap="Anon Patient Name">(0010,0010)</Patient>
+  <Patient remap="Anon PatientID">(0010,0020)</Patient>
+  <Study>(0020,0010)</Study>
+  <Study>(0008,0020)</Study>
+  <Series>(0020,0011)</Series>
+  <Series>(0008,0031)</Series>
+</Columns>
