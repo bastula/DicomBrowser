@@ -53,7 +53,7 @@ implements ProgressMonitorI,EditProgressMonitor {
 	  final StringBuilder sb = new StringBuilder(note);
 	  sb.append(" (").append(current-min).append("/");
 	  sb.append(0 >= range ? "?" : range);
-	  sb.append(")");
+	  sb.append(")").append(LINE_SEPARATOR);
 	  os.append(sb.toString());
 	  lastReport = current;
       }
