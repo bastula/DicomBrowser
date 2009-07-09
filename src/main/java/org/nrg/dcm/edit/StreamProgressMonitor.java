@@ -16,18 +16,21 @@ final class StreamProgressMonitor
 implements ProgressMonitorI,EditProgressMonitor {
   private final static String LINE_SEPARATOR = System.getProperty("line.separator");
   private final PrintStream os;
-  private final String desc, format, startNote;
+  private final String desc, startNote;
   private String note;
   private int min = 0, max = 0, lastReport = 0;
   private int reportCutoff = 200, reportIntervalCoarse = 100, reportIntervalFine = 20;
   
-  public StreamProgressMonitor(final PrintStream os, final String desc, final String startNote, int max) {
+  public StreamProgressMonitor(final PrintStream os, final String desc, final String startNote, final int max) {
     this.os = os;
     this.desc = desc;
-    this.format = desc + " %s (%d/%d)" + LINE_SEPARATOR;
     this.note = this.startNote = startNote;
     this.max = max;
    }
+  
+  public StreamProgressMonitor(final PrintStream os, final String desc, final String startNote) {
+      this(os, desc, startNote, 0);
+  }
   
   public void setReportIntervals(final int cutoff, final int coarse, final int fine) {
     this.reportCutoff = cutoff;
@@ -44,12 +47,16 @@ implements ProgressMonitorI,EditProgressMonitor {
   }
   
   public void setProgress(final int current) {
-    final int range = max - min;
-    final int reportInterval = (range > reportCutoff) ? reportIntervalCoarse : reportIntervalFine;
-    if (current - lastReport >= reportInterval) {
-      os.format(format, note, current - min, range);
-      lastReport = current;
-    }
+      final int range = max - min;
+      final int reportInterval = (range > reportCutoff) ? reportIntervalCoarse : reportIntervalFine;
+      if (current - lastReport >= reportInterval) {
+	  final StringBuilder sb = new StringBuilder(note);
+	  sb.append(" (").append(current-min).append("/");
+	  sb.append(0 >= range ? "?" : range);
+	  sb.append(")");
+	  os.append(sb.toString());
+	  lastReport = current;
+      }
   }
   
   public void setNote(final String note) {
