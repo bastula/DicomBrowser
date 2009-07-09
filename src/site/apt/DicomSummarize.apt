@@ -1,0 +1,29 @@
+  ------
+  DicomSummarize
+  ------
+  Kevin A. Archie <karchie@npg.wustl.edu>
+  ------
+  2009-07-08
+  ------
+
+DicomSummarize
+
+ DicomSummarize is a command-line utility for generating a CSV
+ spreadsheet table summarizing user-specified metadata in DICOM data.
+ See {{batch-anon.html}} for detailed instructions.
+
+* Synopsis
+
+-----
+ DicomSummarize -c config.xml [-v output] [-h] [DIRECTORY]...
+-----
+
+* Parameters
+
+  [-c <config.xml>, --config=<config.xml>] path of configuration XML
+    file
+
+  [-v <values.csv>, --values=<values.csv>] path of CSV spreadsheet
+    output file; defaults to standard output
+
+  [-h, --help] display program information and exit

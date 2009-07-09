@@ -45,6 +45,12 @@ content, and is suited to operating on studies and series containing
 hundreds or thousands of image files rather than on individual images.
   </description>
   <url>http://nrg.wustl.edu/projects/DICOM/DicomBrowser.jsp</url>
+  <distributionManagement>
+    <site>
+      <id>website</id>
+      <url>scp://nrg.wustl.edu/opt/apache-tomcat-5.5.17/webapps/ROOT/projects/DICOM/DicomBrowser/</url>
+    </site>
+  </distributionManagement>
   <scm>
     <connection>scm:svn:http://nrg.wustl.edu/svn/dicom/DicomBrowser</connection>
     <developerConnection>scm:svn:svn+ssh://nrg.wustl.edu/opt/svn/dicom/DicomBrowser</developerConnection>
