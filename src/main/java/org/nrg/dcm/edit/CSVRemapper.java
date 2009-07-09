@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -34,12 +35,13 @@ import org.apache.log4j.Logger;
 import org.dcm4che2.net.TransferCapability;
 import org.dcm4che2.util.TagUtils;
 import org.dom4j.DocumentException;
-import org.nrg.dcm.FileSet;
 import org.nrg.dcm.browse.DicomBrowser;
 import org.nrg.dcm.io.BatchExporter;
 import org.nrg.dcm.io.CStoreExporter;
 import org.nrg.dcm.io.DicomObjectExporter;
 import org.nrg.dcm.io.NewRootFileExporter;
+import org.nrg.dcm.io.TransferCapabilityExtractor;
+import org.nrg.io.FileWalkIterator;
 
 import com.Ostermiller.util.CSVParse;
 import com.Ostermiller.util.CSVParser;
@@ -273,41 +275,37 @@ public final class CSVRemapper {
 	final Map<RemapWithContext,Collection<String>> overspecified = new LinkedHashMap<RemapWithContext,Collection<String>>();
 	final Map<RemapWithContext,String> uniqueAssignments = new LinkedHashMap<RemapWithContext,String>();
 	for (final Map.Entry<RemapWithContext,Collection<String>> e : assignedValues.entrySet()) {
-	    switch (e.getValue().size()) {
-	    case 0:
+	    final Iterator<String> vi = e.getValue().iterator();
+	    if (vi.hasNext()) {
+		final String v = vi.next();
+		if (vi.hasNext()) {
+		    overspecified.put(e.getKey(), e.getValue());
+		} else {
+		    uniqueAssignments.put(e.getKey(), v);
+		}
+	    } else {
 		underspecified.add(e.getKey());
-		break;
-
-	    case 1:
-		uniqueAssignments.put(e.getKey(), e.getValue().toArray(new String[0])[0]);
-		break;
-
-	    default:
-		overspecified.put(e.getKey(), e.getValue());
 	    }
 	}
 
-	if (underspecified.isEmpty() && overspecified.isEmpty())
+	if (underspecified.isEmpty() && overspecified.isEmpty()) {
 	    return uniqueAssignments;
-	else
+	} else {
 	    throw new InvalidRemapsException(underspecified, overspecified);
+	}
     }
 
-    private static Constraint makeConstraint(final RemapWithContext remap, final Collection<File> dicomFiles) {
+    private static Constraint makeConstraint(final RemapWithContext remap) {
 	final Collection<ConstraintMatch> conditions = new LinkedHashSet<ConstraintMatch>();
 	for (Map.Entry<Integer,String> me : remap.context.selectionKeys.entrySet()) {
 	    conditions.add(new SimpleConstraintMatch(me.getKey(), me.getValue()));
 	}
-	return new Constraint(new ConstraintConjunction(conditions), dicomFiles);
+	return new Constraint(new ConstraintConjunction(conditions));
     }
 
     public Map<?,?> apply(final File remapSpreadsheet, final URI out, final Collection<File> roots)
     throws IOException,AttributeException,InvalidRemapsException,SQLException {
 	final StatementList statements = new StatementArrayList(globalStatements);
-
-	final FileSet fs = new FileSet(roots.toArray(new File[0]), false,
-		new StreamProgressMonitor(messages, "Reading", "source DICOM", roots.size()));
-	final Collection<File> files = fs.getDataFiles();
 
 	if (null != remapSpreadsheet) {
 	    final Reader csvr = new FileReader(remapSpreadsheet);
@@ -315,7 +313,7 @@ public final class CSVRemapper {
 
 	    try {
 		for (final Map.Entry<RemapWithContext,String> e : makeAssignments(csvp).entrySet()) {
-		    statements.add(new Statement(makeConstraint(e.getKey(), files),
+		    statements.add(new Statement(makeConstraint(e.getKey()),
 			    new Assignment(e.getKey().column.getTag(), e.getValue())));
 		}
 	    } catch (IOException e) {
@@ -333,19 +331,20 @@ public final class CSVRemapper {
 	if ("file".equals(dest.getScheme())) {
 	    exporter = new NewRootFileExporter(AE_TITLE, new File(dest), roots);
 	} else if ("dicom".equals(dest.getScheme())) {
+	    // TODO: need to walk roots, extract TCs, and set files
 	    final String locAETitle = dest.getUserInfo();
 	    final String destHost = dest.getHost();
 	    final int destPort = -1 == dest.getPort() ? DICOM_DEFAULT_PORT : dest.getPort();
 	    final String destAETitle = dest.getPath().replaceAll("/", "");
 	    exporter = new CStoreExporter(destHost, Integer.toString(destPort), false,
 		    destAETitle, locAETitle,
-		    fs.getTransferCapabilities(TransferCapability.SCU));
+		    TransferCapabilityExtractor.getTransferCapabilities(new FileWalkIterator(roots), TransferCapability.SCU));
 	} else {
 	    throw new UnsupportedOperationException("no exporter defined for URI scheme " + out.getScheme());
 	}
 
-	final BatchExporter batch = new BatchExporter(exporter, statements, files);
-	batch.setProgressMonitor(new StreamProgressMonitor(messages, "Processing", "modified DICOM", files.size()), 0);
+	final BatchExporter batch = new BatchExporter(exporter, statements, new FileWalkIterator(roots));
+	batch.setProgressMonitor(new StreamProgressMonitor(messages, "Processing", "modified DICOM"), 0);
 	batch.run();
 	return batch.getFailures();
     }
