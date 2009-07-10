@@ -14,16 +14,16 @@
 			<outputDirectory>lib</outputDirectory>
 		</file>
 		<file>
-			<source>src/main/bin/DicomBrowser.bat</source>
-			<outputDirectory>bin</outputDirectory>
-			<lineEnding>dos</lineEnding>
-			<fileMode>0755</fileMode>
-		</file>
-		<file>
 			<source>src/main/bin/DicomBrowser.sh</source>
 			<destName>DicomBrowser</destName>
 			<outputDirectory>bin</outputDirectory>
 			<lineEnding>unix</lineEnding>
+			<fileMode>0755</fileMode>
+		</file>
+		<file>
+			<source>src/main/bin/DicomBrowser.bat</source>
+			<outputDirectory>bin</outputDirectory>
+			<lineEnding>dos</lineEnding>
 			<fileMode>0755</fileMode>
 		</file>
 		<file>
@@ -34,10 +34,22 @@
 			<fileMode>0755</fileMode>
 		</file>
 		<file>
-			<source>src/main/bin/DicomRemap.sh</source>
+			<source>src/main/bin/DicomRemap.bat</source>
+			<outputDirectory>bin</outputDirectory>
+			<lineEnding>dos</lineEnding>
+			<fileMode>0755</fileMode>
+		</file>
+		<file>
+			<source>src/main/bin/DicomSummarize.sh</source>
 			<destName>DicomSummarize</destName>
 			<outputDirectory>bin</outputDirectory>
 			<lineEnding>unix</lineEnding>
+			<fileMode>0755</fileMode>
+		</file>		
+		<file>
+			<source>src/main/bin/DicomSummarize.bat</source>
+			<outputDirectory>bin</outputDirectory>
+			<lineEnding>dos</lineEnding>
 			<fileMode>0755</fileMode>
 		</file>		
 	</files>
