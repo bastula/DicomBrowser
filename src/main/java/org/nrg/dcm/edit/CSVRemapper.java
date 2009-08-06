@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.SQLException;
 import java.text.ParseException;
@@ -303,6 +304,17 @@ public final class CSVRemapper {
     return new Constraint(new ConstraintConjunction(conditions));
   }
 
+  /**
+   * 
+   * @param remapSpreadsheet
+   * @param out destination URI; must be absolute
+   * @param roots
+   * @return
+   * @throws IOException
+   * @throws AttributeException
+   * @throws InvalidRemapsException
+   * @throws SQLException
+   */
   public Map<?,?> apply(final File remapSpreadsheet, final URI out, final Collection<File> roots)
   throws IOException,AttributeException,InvalidRemapsException,SQLException {
     final StatementList statements = new StatementArrayList(globalStatements);
@@ -327,14 +339,16 @@ public final class CSVRemapper {
 
     final DicomObjectExporter exporter;
 
-    final URI dest = out.isAbsolute() ? out : out.resolve(System.getProperty("user.dir"));
-    if ("file".equals(dest.getScheme())) {
-      exporter = new NewRootFileExporter(AE_TITLE, new File(dest), roots);
-    } else if ("dicom".equals(dest.getScheme())) {
-      final String locAETitle = dest.getUserInfo();
-      final String destHost = dest.getHost();
-      final int destPort = -1 == dest.getPort() ? DICOM_DEFAULT_PORT : dest.getPort();
-      final String destAETitle = dest.getPath().replaceAll("/", "");
+    if (!out.isAbsolute()) {
+      throw new IllegalArgumentException("destination URI must be absolute");
+    }
+    if ("file".equals(out.getScheme())) {
+      exporter = new NewRootFileExporter(AE_TITLE, new File(out), roots);
+    } else if ("dicom".equals(out.getScheme())) {
+      final String locAETitle = out.getUserInfo();
+      final String destHost = out.getHost();
+      final int destPort = -1 == out.getPort() ? DICOM_DEFAULT_PORT : out.getPort();
+      final String destAETitle = out.getPath().replaceAll("/", "");
       exporter = new CStoreExporter(destHost, Integer.toString(destPort), false,
           destAETitle, locAETitle,
           TransferCapabilityExtractor.getTransferCapabilities(new FileWalkIterator(roots), TransferCapability.SCU));
@@ -374,6 +388,15 @@ public final class CSVRemapper {
     formatter.printHelp("DicomRemapper [OPTIONS] [DICOM-FILES]", opts);
   }
 
+  private static URI toURI(final String path) throws URISyntaxException {
+    final URI uri = new URI(path);
+    if (uri.isAbsolute() && uri.getScheme().length() > 1) {
+      return uri;
+    } else {
+      return new File(path).toURI();
+    }
+  }
+  
   /**
    * @param args
    */
@@ -395,6 +418,9 @@ public final class CSVRemapper {
     final Option configXMLOpt = new Option("c", "config", true, "configuration XML file");
     options.addOption(configXMLOpt);
 
+    final Option verboseOpt = new Option("x", false, "Display long information about errors");
+    options.addOption(verboseOpt);
+    
     final Option valuesOpt = new Option("v", "values", true,
     "CSV spreadsheet file specifying remapped values");
     options.addOption(valuesOpt);
@@ -461,8 +487,8 @@ public final class CSVRemapper {
         }
       }
     }
-
-    final URI out = new URI(cli.getOptionValue(outputOpt.getOpt()));
+    
+    final URI out = toURI(cli.getOptionValue(outputOpt.getOpt()));
 
     final Collection<File> infiles = new ArrayList<File>();
     for (final String path : cli.getArgs()) {
@@ -473,9 +499,15 @@ public final class CSVRemapper {
     final File remapCSV = null == remapCSVPath ? null : new File(remapCSVPath);
     final Map<?,?> failures = remapper.apply(remapCSV, out, infiles);
     if (!failures.isEmpty()) {
+      final boolean verbose = cli.hasOption(verboseOpt.getOpt());
       System.err.println("Output failed for some objects:");
       for (final Map.Entry<?,?> me : failures.entrySet()) {
-        System.err.println(me.getKey() + ": " + me.getValue());
+        System.err.print(me.getKey() + ": ");
+        final Object v = me.getValue();
+        System.err.println(v);
+        if (verbose && v instanceof Throwable) {
+          ((Throwable)v).printStackTrace(System.err);
+        }
       }
     }
   }

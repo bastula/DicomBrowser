@@ -69,6 +69,7 @@ public abstract class AbstractFileExporter implements DicomObjectExporter {
 	fmi.putString(Tag.SourceApplicationEntityTitle, VR.AE, aeTitle);
 
 	final File dest = map(source);
+	dest.getParentFile().mkdirs();
 	final FileOutputStream fos = new FileOutputStream(dest);
 	try {
 	    final OutputStream os;

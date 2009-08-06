@@ -157,15 +157,6 @@ final class CStoreDialog extends JDialog implements ActionListener {
 	    return null;
 	}
 
-	AEAddr matchTitle(final String title) {
-	    for (final AEAddr a : this) {
-		if (a.remoteAE.equals(title)) {
-		    return a;
-		}
-	    }
-	    return null;
-	}
-
 	String[] getHosts() {
 	    final Collection<String> hosts = new LinkedHashSet<String>();
 	    for (final AEAddr a : this) {
