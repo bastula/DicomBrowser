@@ -20,6 +20,7 @@ import org.dcm4che2.net.NetworkConnectionBuilder;
 import org.dcm4che2.net.TransferCapability;
 import org.dcm4che2.net.NetworkConnectionBuilder.TlsType;
 import org.nrg.dcm.DicomSender;
+import org.nrg.dcm.edit.DicomUtils;
 
 
 /**
@@ -100,6 +101,6 @@ public class CStoreExporter implements DicomObjectExporter {
      * @see org.nrg.dcm.io.DicomObjectExporter#export(org.dcm4che2.data.DicomObject, java.io.File)
      */
     public void export(final DicomObject o, final File source) throws Exception {
-	sender.send(o, IOUtils.getTransferSyntaxUID(o));
+	sender.send(o, DicomUtils.getTransferSyntaxUID(o));
     }
 }
