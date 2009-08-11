@@ -96,6 +96,11 @@ public class CStoreExporter implements DicomObjectExporter {
 	return sender;
     }
 
+    /*
+     * (non-Javadoc)
+     * @see org.nrg.dcm.io.DicomObjectExporter#close()
+     */
+    public void close() { sender.close(); }
     
     /* (non-Javadoc)
      * @see org.nrg.dcm.io.DicomObjectExporter#export(org.dcm4che2.data.DicomObject, java.io.File)
