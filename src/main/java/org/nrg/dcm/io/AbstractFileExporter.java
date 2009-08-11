@@ -48,6 +48,12 @@ public abstract class AbstractFileExporter implements DicomObjectExporter {
       // Default TS UID is Implicit VR LE (PS 3.5, Section 10)
       return ts == null ? UID.ImplicitVRLittleEndian : ts;
     }
+    
+    /*
+     * (non-Javadoc)
+     * @see org.nrg.dcm.io.DicomObjectExporter#close()
+     */
+    public final void close() {}
 
     /* (non-Javadoc)
      * @see org.nrg.dcm.io.DicomObjectExporter#export(org.dcm4che2.data.DicomObject, java.io.File)
