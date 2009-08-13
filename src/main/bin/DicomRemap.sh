@@ -21,4 +21,4 @@ case "`uname`" in
 	CYGWIN*) export CLASSPATH="`cygpath -wp $CLASSPATH`"
 esac
 
-"${JAVA}" org.nrg.dcm.edit.CSVRemapper $*
+"${JAVA}" -Djava.awt.headless=true org.nrg.dcm.edit.CSVRemapper $*
