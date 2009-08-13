@@ -37,6 +37,7 @@ import org.dcm4che2.net.TransferCapability;
 import org.dcm4che2.util.TagUtils;
 import org.dom4j.DocumentException;
 import org.nrg.dcm.browse.DicomBrowser;
+import org.nrg.dcm.edit.DicomUtils.DicomObjectException;
 import org.nrg.dcm.io.BatchExporter;
 import org.nrg.dcm.io.CStoreExporter;
 import org.nrg.dcm.io.DicomObjectExporter;
@@ -53,7 +54,7 @@ import com.Ostermiller.util.CSVParser;
  */
 public final class CSVRemapper {
   private static final int DICOM_DEFAULT_PORT = 104;
-  private static final String AE_TITLE = "DicomRemapper";
+  private static final String AE_TITLE = "DicomRemap";
 
   private final static class RemapColumn {
     final String level;
@@ -339,25 +340,29 @@ public final class CSVRemapper {
 
     final DicomObjectExporter exporter;
 
+    int count;
     if (!out.isAbsolute()) {
       throw new IllegalArgumentException("destination URI must be absolute");
     }
     if ("file".equals(out.getScheme())) {
       exporter = new NewRootFileExporter(AE_TITLE, new File(out), roots);
+      count = 0;
     } else if ("dicom".equals(out.getScheme())) {
       final String locAETitle = out.getUserInfo();
       final String destHost = out.getHost();
       final int destPort = -1 == out.getPort() ? DICOM_DEFAULT_PORT : out.getPort();
       final String destAETitle = out.getPath().replaceAll("/", "");
+      final FileWalkIterator walker = new FileWalkIterator(roots);
+      final TransferCapability[] tcs = TransferCapabilityExtractor.getTransferCapabilities(walker, TransferCapability.SCU);
+      count = walker.getCount();
       exporter = new CStoreExporter(destHost, Integer.toString(destPort), false,
-          destAETitle, locAETitle,
-          TransferCapabilityExtractor.getTransferCapabilities(new FileWalkIterator(roots), TransferCapability.SCU));
+          destAETitle, locAETitle, tcs);
     } else {
       throw new UnsupportedOperationException("no exporter defined for URI scheme " + out.getScheme());
     }
 
     final BatchExporter batch = new BatchExporter(exporter, statements, new FileWalkIterator(roots));
-    batch.setProgressMonitor(new StreamProgressMonitor(messages, "Processing", "modified DICOM"), 0);
+    batch.setProgressMonitor(new StreamProgressMonitor(messages, "Processing", "modified DICOM"), count);
     batch.run();
     return batch.getFailures();
   }
@@ -504,9 +509,13 @@ public final class CSVRemapper {
       for (final Map.Entry<?,?> me : failures.entrySet()) {
         System.err.print(me.getKey() + ": ");
         final Object v = me.getValue();
-        System.err.println(v);
-        if (verbose && v instanceof Throwable) {
-          ((Throwable)v).printStackTrace(System.err);
+        if (v instanceof DicomObjectException) {
+            System.err.println("not DICOM data");
+        } else {
+            System.err.println(v);
+            if (verbose && v instanceof Throwable) {
+        	((Throwable)v).printStackTrace(System.err);
+            }
         }
       }
     }
