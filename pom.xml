@@ -99,11 +99,13 @@ hundreds or thousands of image files rather than on individual images.
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>1.5.0</version>
+      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
       <version>1.5.0</version>
+      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.nrg</groupId>
@@ -116,9 +118,9 @@ hundreds or thousands of image files rather than on individual images.
       <!-- but don't include it in the assembly for runtime -->
       <groupId>com.apple</groupId>
       <artifactId>ui</artifactId>
-      <version>1.5.0</version>
+      <version>1.6.0</version>
       <scope>system</scope>
-      <systemPath>${user.home}/.m2/repository/com/apple/ui/1.5.0/ui-1.5.0.jar</systemPath>
+      <systemPath>${user.home}/.m2/repository/com/apple/ui/1.6.0/ui-1.6.0.jar</systemPath>
     </dependency>
     <dependency>
       <groupId>ij</groupId>
