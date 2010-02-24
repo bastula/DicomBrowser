@@ -16,7 +16,8 @@ including:
 * ui.jar from Apple's MRJ, version 1.5 or later; this is needed for compiling
   but is not included in the fat jar.  The easiest way to get this is to take it
   from a Mac with MRJ 1.5.0+; if that's not available, try looking around at
-  http://developer.apple.com/java
+  http://developer.apple.com/java. The POM specifies version 1.6, so if you have
+  a 1.5 jar you should modify the POM accordingly.
   
-* ij.jar from ImageJ, version as specified in the pom.xml and .classpath
+* ij.jar from ImageJ, version as specified in the POM
   (but no earlier than 1.38L)
