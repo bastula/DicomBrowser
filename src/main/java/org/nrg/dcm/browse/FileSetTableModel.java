@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2006-2009 Washington University
+ * Copyright (c) 2006-2010 Washington University
  */
 package org.nrg.dcm.browse;
 
@@ -34,8 +34,6 @@ import javax.swing.tree.TreePath;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.TreeSelectionEvent;
 
-import org.apache.log4j.Logger;
-
 import org.dcm4che2.data.Tag;
 import org.dcm4che2.net.TransferCapability;
 import org.dcm4che2.util.TagUtils;
@@ -60,10 +58,12 @@ import org.nrg.dcm.io.DicomObjectExporter;
 import org.nrg.dcm.io.NewRootFileExporter;
 import org.nrg.dcm.io.OverwriteFileExporter;
 import org.nrg.util.EditProgressMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
- * @author Kevin A. Archie <karchie@npg.wustl.edu>
+ * @author Kevin A. Archie <karchie@wustl.edu>
  *
  */
 public class FileSetTableModel extends AbstractTableModel
@@ -71,7 +71,7 @@ implements TreeSelectionListener {
     private static final long serialVersionUID = 1;
     private static final String AE_TITLE = "DicomBrowser";
 
-    private final Logger logger = Logger.getLogger(FileSetTableModel.class);
+    private final Logger logger = LoggerFactory.getLogger(FileSetTableModel.class);
 
     private static String colNames[] = {"tag", "name", "action", "value"};
     private static final String SENDING_FILES = "Sending files...";

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2006-2009 Washington University
+ * Copyright (c) 2006-2010 Washington University
  */
 package org.nrg.dcm.browse;
 
@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -64,7 +65,7 @@ import org.nrg.dcm.FileSet;
 import org.nrg.dcm.edit.ScriptApplicator;
 
 /**
- * @author Kevin A. Archie <karchie@npg.wustl.edu>
+ * @author Kevin A. Archie <karchie@wustl.edu>
  */
 public final class DicomBrowser extends JPanel
 implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionListener {
@@ -517,7 +518,7 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
 
     private void add(final File[] files) {
 	assert !SwingUtilities.isEventDispatchThread();
-	treeModel.add(files);
+	treeModel.add(Arrays.asList(files));
 	if (treeModel.getChildCount(treeModel.getRoot()) > 0) {
 	    // now there are some files, so we can save or send them.
 	    SwingUtilities.invokeLater(new Runnable() {

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008-2009 Washington University
+ * Copyright (c) 2008-2010 Washington University
  */
 package org.nrg.dcm.edit;
 
@@ -33,7 +33,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
-import org.apache.log4j.Logger;
+
 import org.dcm4che2.net.TransferCapability;
 import org.dcm4che2.util.TagUtils;
 import org.dom4j.DocumentException;
@@ -48,12 +48,14 @@ import org.nrg.dcm.io.DicomObjectExporter;
 import org.nrg.dcm.io.NewRootFileExporter;
 import org.nrg.dcm.io.TransferCapabilityExtractor;
 import org.nrg.io.FileWalkIterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.Ostermiller.util.CSVParse;
 import com.Ostermiller.util.CSVParser;
 
 /**
- * @author Kevin A. Archie <karchie@npg.wustl.edu>
+ * @author Kevin A. Archie <karchie@wustl.edu>
  *
  */
 public final class CSVRemapper {
@@ -386,7 +388,7 @@ public final class CSVRemapper {
 	} catch (IOException e) {
 	    throw e;
 	} catch (Exception e) {
-	    final Logger log = Logger.getLogger(CSVRemapper.class);
+	    final Logger log = LoggerFactory.getLogger(CSVRemapper.class);
 	    log.error("Error processing DICOM anonymization script", e);
 	}
     }

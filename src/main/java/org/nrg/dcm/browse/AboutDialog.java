@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2006-2009 Washington University
+ * Copyright (c) 2006-2010 Washington University
  */
 package org.nrg.dcm.browse;
 
@@ -17,7 +17,7 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 
 /**
- * @author Kevin A. Archie <karchie@npg.wustl.edu>
+ * @author Kevin A. Archie <karchie@wustl.edu>
  *
  */
 final class AboutDialog extends JDialog {
@@ -59,7 +59,7 @@ final class AboutDialog extends JDialog {
     version.setAlignmentX(Component.CENTER_ALIGNMENT);
     add(version);
     
-    final JLabel wucopy = new JLabel("Copyright \u00A9 2006-2009 Washington University");
+    final JLabel wucopy = new JLabel("Copyright \u00A9 2006-2010 Washington University");
     wucopy.setBorder(margin);
     wucopy.setAlignmentX(Component.CENTER_ALIGNMENT);
     add(wucopy);

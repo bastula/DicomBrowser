@@ -1,6 +1,5 @@
 /**
- * $Id: FileSetTreeModel.java,v 1.3 2007/03/01 19:29:36 karchie Exp $
- * Copyright (c) 2006,2007 Washington University
+ * Copyright (c) 2006,2007,2010 Washington University
  */
 package org.nrg.dcm.browse;
 
@@ -27,7 +26,7 @@ import org.nrg.dcm.ProgressMonitorI;
 
 
 /**
- * @author Kevin A. Archie <karchie@npg.wustl.edu>
+ * @author Kevin A. Archie <karchie@wustl.edu>
  */
 public final class FileSetTreeModel implements TreeModel {
   private static final String READING_FILES = "Reading files...";
@@ -68,14 +67,14 @@ public final class FileSetTreeModel implements TreeModel {
    * Add the listed files to the FileSet.  Must be invoked from outside the Swing event handler.
    * @param files
    */
-  public void add(File[] files) {
+  public void add(final Collection<File> files) {
     assert !SwingUtilities.isEventDispatchThread();
 
     final ProgressMonitorI pn = SwingProgressMonitor.getMonitor(window, rsrcb.getString(READING_FILES),
-	"", 0, files.length);
+	"", 0, files.size());
 
     try {
-      fs.add(files, pn);
+      fs.add(files.toArray(new File[0]), pn);
       handleAdd();
     } catch (final Exception e) {
       SwingUtilities.invokeLater(new Runnable() {
