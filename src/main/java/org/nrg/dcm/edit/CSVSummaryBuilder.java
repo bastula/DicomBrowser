@@ -1,6 +1,5 @@
 /**
- * $Id: CSVSummaryBuilder.java,v 1.9 2008/04/11 17:20:07 karchie Exp $
- * Copyright (c) 2008 Washington University
+ * Copyright (c) 2008,2010 Washington University
  */
 package org.nrg.dcm.edit;
 
@@ -11,6 +10,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.text.ParseException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -31,9 +31,10 @@ import com.Ostermiller.util.CSVPrinter;
 
 /**
  * Builds a CSV spreadsheet summary of many DICOM files.
- * @author Kevin A. Archie <karchie@npg.wustl.edu>
+ * @author Kevin A. Archie <karchie@wustl.edu>
  */
 public class CSVSummaryBuilder {
+  private static final Map<String,String> EMPTY_OPTS = Collections.emptyMap();
   private static final String EMPTY_STRING = "";
   private static final String[] STRING_ARRAY = new String[0];
   
@@ -61,7 +62,7 @@ public class CSVSummaryBuilder {
 
   public void run(final CSVPrint spreadsheet, final ProgressMonitorI pm, final File...files) throws Exception {
     // Trawl through the files to build the Directory Record representation
-    final FileSet fs = new FileSet(files, null, factory, pm);
+    final FileSet fs = new FileSet(files, EMPTY_OPTS, factory, pm);
 
     makeHeader(spreadsheet, factory.getColumns());
     

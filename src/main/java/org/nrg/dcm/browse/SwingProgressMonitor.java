@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2006-2009 Washington University
+ * Copyright (c) 2006-2010 Washington University
  */
 package org.nrg.dcm.browse;
 
@@ -9,19 +9,20 @@ import java.lang.reflect.InvocationTargetException;
 import javax.swing.ProgressMonitor;
 import javax.swing.SwingUtilities;
 
-import org.apache.log4j.Logger;
 import org.nrg.dcm.ProgressMonitorI;
 import org.nrg.util.EditProgressMonitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
  * Swing ProgressMonitor implementing ProgressMonitorI interface
  * All methods are thread safe.
- * @author Kevin A. Archie <karchie@npg.wustl.edu>
+ * @author Kevin A. Archie <karchie@wustl.edu>
  */
 public final class SwingProgressMonitor implements
 ProgressMonitorI,EditProgressMonitor {
-    private final Logger logger = Logger.getLogger(SwingProgressMonitor.class);
+    private final Logger logger = LoggerFactory.getLogger(SwingProgressMonitor.class);
     private final ProgressMonitor pm;
     private final String message;
 
