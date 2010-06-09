@@ -26,6 +26,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -322,7 +323,7 @@ public final class CSVRemapper {
      * @throws InvalidRemapsException
      * @throws SQLException
      */
-    public Map<?,?> apply(final File remapSpreadsheet, final URI out, final Collection<File> roots)
+    public Map<?,?> apply(final File remapSpreadsheet, final URI out, final Collection<File> files)
     throws IOException,AttributeException,InvalidRemapsException,SQLException {
 	final StatementList statements = new StatementArrayList(globalStatements);
 
@@ -351,6 +352,14 @@ public final class CSVRemapper {
 	    throw new IllegalArgumentException("destination URI must be absolute");
 	}
 	if ("file".equals(out.getScheme())) {
+	    final Set<File> roots = new LinkedHashSet<File>();	// only directories can be roots
+	    for (final File file : files) {
+		if (file.isDirectory()) {
+		    roots.add(file);
+		} else if (file.exists()) {
+		    roots.add(file.getParentFile());
+		}
+	    }
 	    exporter = new NewRootFileExporter(AE_TITLE, new File(out), roots);
 	    count = 0;
 	} else if ("dicom".equals(out.getScheme())) {
@@ -358,7 +367,7 @@ public final class CSVRemapper {
 	    final String destHost = out.getHost();
 	    final int destPort = -1 == out.getPort() ? DICOM_DEFAULT_PORT : out.getPort();
 	    final String destAETitle = out.getPath().replaceAll("/", "");
-	    final FileWalkIterator walker = new FileWalkIterator(roots);
+	    final FileWalkIterator walker = new FileWalkIterator(files);
 	    final TransferCapability[] tcs = TransferCapabilityExtractor.getTransferCapabilities(walker, TransferCapability.SCU);
 	    count = walker.getCount();
 	    exporter = new CStoreExporter(destHost, Integer.toString(destPort), false,
@@ -367,7 +376,7 @@ public final class CSVRemapper {
 	    throw new UnsupportedOperationException("no exporter defined for URI scheme " + out.getScheme());
 	}
 
-	final BatchExporter batch = new BatchExporter(exporter, statements, new FileWalkIterator(roots));
+	final BatchExporter batch = new BatchExporter(exporter, statements, new FileWalkIterator(files));
 	batch.setProgressMonitor(new StreamProgressMonitor(messages, "Processing", "modified DICOM", count), 0);
 	batch.run();
 	return batch.getFailures();
@@ -396,11 +405,11 @@ public final class CSVRemapper {
 
     private static void showUsage(final Options opts) {
 	final HelpFormatter formatter = new HelpFormatter();
-	formatter.printHelp("DicomRemapper [OPTIONS] [DICOM-FILES]", opts);
+	formatter.printHelp("DicomRemapper [OPTIONS] [directory | file ...]", opts);
     }
 
     private static URI toURI(final String path) throws URISyntaxException {
-	final URI uri = new URI(path);
+	final URI uri = new URI(path.replace(File.separatorChar, '/'));
 	if (uri.isAbsolute() && uri.getScheme().length() > 1) {
 	    return uri;
 	} else {
@@ -415,7 +424,7 @@ public final class CSVRemapper {
 	final Options options = new Options();
 	options.addOption("h", "help", false, "show this information");
 
-	final Option outputOpt = new Option("o", "output", true, "target location formodified files (file path or dicom: URI)");
+	final Option outputOpt = new Option("o", "output", true, "target for modified files (directory path or dicom: URI)");
 	outputOpt.setRequired(true);
 	options.addOption(outputOpt);
 

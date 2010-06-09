@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
 
-import org.nrg.StringUtils;
+import org.nrg.lang.StringUtils;
 import org.nrg.dcm.Utils;
 import org.nrg.dcm.edit.Operation;
 

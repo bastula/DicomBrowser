@@ -106,6 +106,11 @@ hundreds or thousands of image files rather than on individual images.
       <artifactId>DicomEdit</artifactId>
       <version>1.2-SNAPSHOT</version>
     </dependency>
+   <dependency>
+      <groupId>org.nrg</groupId>
+      <artifactId>nrgutil</artifactId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
     <dependency>
       <!-- Apple library for Mac-specific GUI -->
       <!-- Use a repository copy to compile against on non-Macs, -->
