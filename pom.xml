@@ -35,7 +35,7 @@
   <groupId>org.nrg</groupId>
   <artifactId>DicomBrowser</artifactId>
   <packaging>jar</packaging>
-  <version>1.5-SNAPSHOT</version>
+  <version>1.5.0b1</version>
   <name>DicomBrowser</name>
   <description>
 DicomBrowser is a GUI-based utility for viewing and modifying metadata
@@ -93,18 +93,18 @@ hundreds or thousands of image files rather than on individual images.
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>1.5.0</version>
+      <version>[1.6.1,)</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-nop</artifactId>
-      <version>1.5.0</version>
+      <version>[1.6.1,)</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.nrg</groupId>
       <artifactId>DicomEdit</artifactId>
-      <version>1.2-SNAPSHOT</version>
+      <version>1.2.0</version>
     </dependency>
    <dependency>
       <groupId>org.nrg</groupId>
@@ -139,7 +139,12 @@ hundreds or thousands of image files rather than on individual images.
     <dependency>
       <groupId>org.nrg</groupId>
       <artifactId>DicomDB-browser</artifactId>
-      <version>0.1-SNAPSHOT</version>
+      <version>0.1.0b1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.nrg</groupId>
+      <artifactId>DicomUtils</artifactId>
+      <version>1.1.0</version>
     </dependency>
     <dependency>
       <groupId>org.json</groupId>
