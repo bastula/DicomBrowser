@@ -4,7 +4,15 @@ To build binary and Java Web Start distributions, do:
 
 mvn assembly:assembly -Dmaven.test.skip
 
-The products will be in target/ -- each jar in the JWS directory will need to be signed.
+To build a Mac OS X app bundle, do:
+
+mvn package osxappbundle:bundle \
+   -DmainClass=org.nrg.dcm.browse.DicomBrowser \
+   -DdictionaryFile=src/main/app-resources/Info.plist
+/Developer/Tools/SetFile -a aBv target/DicomBrowser-${version}/DicomBrowser.app
+
+(Note that this isn't working: the dictionaryFile option doesn't
+appear to be taking effect)
 
 This package requires a lot of things to be in your Maven 2 repository, notably
 including:
