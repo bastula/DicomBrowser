@@ -117,7 +117,7 @@ hundreds or thousands of image files rather than on individual images.
     <dependency>
       <groupId>ij</groupId>
       <artifactId>ij</artifactId>
-      <version>1.41o</version>
+      <version>1.43u</version>
     </dependency>
     <dependency>
       <groupId>dom4j</groupId>
