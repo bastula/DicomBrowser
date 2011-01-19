@@ -4,6 +4,7 @@
 package org.nrg.dcm.io;
 
 import java.io.BufferedOutputStream;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -12,6 +13,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.zip.GZIPOutputStream;
 
+import org.dcm4che2.data.BasicDicomObject;
 import org.dcm4che2.data.DicomObject;
 import org.dcm4che2.data.Tag;
 import org.dcm4che2.data.UID;
@@ -24,7 +26,7 @@ import org.nrg.dcm.edit.DicomUtils.DicomObjectException;
  * @author Kevin A. Archie <karchie@wustl.edu>
  *
  */
-public abstract class AbstractFileExporter implements DicomObjectExporter {
+public abstract class AbstractFileExporter implements DicomObjectExporter,Closeable {
 	private final String aeTitle;
 
 	AbstractFileExporter(final String aeTitle) {
@@ -43,9 +45,7 @@ public abstract class AbstractFileExporter implements DicomObjectExporter {
 	 * @return Transfer Syntax UID
 	 */
 	protected static final String getTransferSyntaxUID(final DicomObject o) {
-		final String ts = o.getString(Tag.TransferSyntaxUID);
-		// Default TS UID is Implicit VR LE (PS 3.5, Section 10)
-		return ts == null ? UID.ImplicitVRLittleEndian : ts;
+		return o.getString(Tag.TransferSyntaxUID, UID.ImplicitVRLittleEndian);
 	}
 
 	/*
@@ -64,11 +64,19 @@ public abstract class AbstractFileExporter implements DicomObjectExporter {
 		if (hasFileMetaInformation(dcmo)) {
 			fmi = dcmo.fileMetaInfo();
 		} else {
-			assert null != o;
 			// Part 10 header ends after group 0002, but read() checks SOP Class UID
 			// to ensure file validity so we need to read at least that far.
 			final DicomObject original = DicomUtils.read(source, Tag.SOPClassUID);
-			fmi = original.fileMetaInfo();
+			if (hasFileMetaInformation(original)) {
+				fmi = original.fileMetaInfo();
+			} else {
+				// Build a new Part 10 header.
+				fmi = new BasicDicomObject();
+				fmi.initFileMetaInformation(dcmo.getString(Tag.SOPClassUID),
+					dcmo.getString(Tag.SOPInstanceUID),
+					getTransferSyntaxUID(original));
+				fmi.putString(Tag.MediaStorageSOPInstanceUID, VR.UI, dcmo.getString(Tag.SOPInstanceUID));
+			}
 		}
 		final String tsuid = getTransferSyntaxUID(fmi);
 
