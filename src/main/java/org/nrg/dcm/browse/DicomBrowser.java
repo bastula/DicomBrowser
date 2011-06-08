@@ -18,6 +18,7 @@ import java.util.prefs.Preferences;
 
 import javax.swing.Action;
 import javax.swing.AbstractAction;
+import javax.swing.ImageIcon;
 import javax.swing.UIManager;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -280,6 +281,7 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
 	super(new BorderLayout());
 	this.frame = frame;
 
+	
 	treeModel = new FileSetTreeModel(frame, fs);
 	tableModel = new FileSetTableModel(this, fs);
 
@@ -682,6 +684,9 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
 	final JFrame frame = new JFrame("DICOM browser");
 	InterfaceCounter.getInstance().register(frame);
 	frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+	
+	//mzheng: adding icon
+	frame.setIconImage(new ImageIcon(ClassLoader.getSystemResource("icon.png")).getImage());
 
 	final DicomBrowser browser = new DicomBrowser(frame, fs);
 	browser.setOpaque(true);

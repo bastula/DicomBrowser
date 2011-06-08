@@ -69,7 +69,7 @@ final class AboutDialog extends JDialog {
     devel.setAlignmentX(Component.CENTER_ALIGNMENT);
     add(devel);
     
-    final JLabel email = new JLabel("Questions, comments, or bugs?  Mail nrgtech@npg.wustl.edu");
+    final JLabel email = new JLabel("Questions, comments, or bugs?  Mail nrg-tech@nrg.wustl.edu");
     email.setBorder(margin);
     email.setAlignmentX(Component.CENTER_ALIGNMENT);
     add(email);
