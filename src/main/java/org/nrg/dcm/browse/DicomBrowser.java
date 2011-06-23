@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2006-2010 Washington University
+ * Copyright (c) 2006-2011 Washington University
  */
 package org.nrg.dcm.browse;
 
@@ -11,7 +11,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.ListResourceBundle;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Stack;
 import java.util.prefs.Preferences;
@@ -64,6 +66,10 @@ import java.awt.event.MouseListener;
 import org.nrg.dcm.FileSet;
 
 import org.nrg.dcm.edit.ScriptApplicator;
+import org.nrg.dcm.edit.SessionVariablePanel;
+import org.nrg.dcm.edit.Variable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Kevin A. Archie <karchie@wustl.edu>
@@ -110,44 +116,44 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
     private static final String SCRIPT_SUFFIX = ".das";
 
     private static final ResourceBundle rsrcb = new ListResourceBundle() {
-	@Override
-	public Object[][] getContents() { return contents; }
-	private final Object[][] contents = {       // TODO: LOCALIZE THIS
-		{FILE_MENU, FILE_MENU},
-		{OPEN_ITEM, OPEN_ITEM},
-		{OPEN_NEW_WINDOW_ITEM, OPEN_NEW_WINDOW_ITEM},
-		{SEND_ITEM, SEND_ITEM},
-		{SAVE_ITEM, SAVE_ITEM},
-		{CLOSE_WIN_ITEM, CLOSE_WIN_ITEM},
-		{EDIT_MENU, EDIT_MENU},
-		{KEEP_ITEM, KEEP_ITEM},
-		{CLEAR_ITEM, CLEAR_ITEM},
-		{DELETE_ITEM, DELETE_ITEM},
-		{ADD_ITEM, ADD_ITEM},
-		{APPLY_SCRIPT_ITEM, APPLY_SCRIPT_ITEM},
-		{UNDO_ITEM, UNDO_ITEM},
-		{REDO_ITEM, REDO_ITEM},
-		{VIEW_MENU, VIEW_MENU},
-		{VIEW_ITEM, VIEW_ITEM},
-		{CLOSE_FILES_ITEM, CLOSE_FILES_ITEM},
-		{HELP_MENU, HELP_MENU},
-		{ABOUT_ITEM, ABOUT_ITEM},
-		{ABOUT_TITLE, ABOUT_TITLE},
-		{SELECT_FILES, SELECT_FILES},
-		{CHECKING_FILES, CHECKING_FILES},
-		{OPENING_SCRIPT, OPENING_SCRIPT},
-		{SCRIPT_FILTER_DESCRIPTION, SCRIPT_FILTER_DESCRIPTION},
-		{BAD_SCRIPT_TITLE,BAD_SCRIPT_TITLE},
-		{BAD_SCRIPT_MSG_FORMAT,BAD_SCRIPT_MSG_FORMAT},
-		{ALL_OR_SELECTED_FILES_QUESTION,ALL_OR_SELECTED_FILES_QUESTION},
-		{ALL_FILES_OPTION,ALL_FILES_OPTION},
-		{SELECTED_FILES_OPTION,SELECTED_FILES_OPTION},
-		{CANCEL_OPTION,CANCEL_OPTION},
-		{APPLYING_SCRIPT,APPLYING_SCRIPT},
-		{FILE_LOAD_FAILED_TITLE,FILE_LOAD_FAILED_TITLE},
-		{FILE_LOAD_FAILED_FORMAT,FILE_LOAD_FAILED_FORMAT},
-		{TRUNCATE_FORMAT, TRUNCATE_FORMAT},
-	};
+        @Override
+        public Object[][] getContents() { return contents; }
+        private final Object[][] contents = {       // TODO: LOCALIZE THIS
+                {FILE_MENU, FILE_MENU},
+                {OPEN_ITEM, OPEN_ITEM},
+                {OPEN_NEW_WINDOW_ITEM, OPEN_NEW_WINDOW_ITEM},
+                {SEND_ITEM, SEND_ITEM},
+                {SAVE_ITEM, SAVE_ITEM},
+                {CLOSE_WIN_ITEM, CLOSE_WIN_ITEM},
+                {EDIT_MENU, EDIT_MENU},
+                {KEEP_ITEM, KEEP_ITEM},
+                {CLEAR_ITEM, CLEAR_ITEM},
+                {DELETE_ITEM, DELETE_ITEM},
+                {ADD_ITEM, ADD_ITEM},
+                {APPLY_SCRIPT_ITEM, APPLY_SCRIPT_ITEM},
+                {UNDO_ITEM, UNDO_ITEM},
+                {REDO_ITEM, REDO_ITEM},
+                {VIEW_MENU, VIEW_MENU},
+                {VIEW_ITEM, VIEW_ITEM},
+                {CLOSE_FILES_ITEM, CLOSE_FILES_ITEM},
+                {HELP_MENU, HELP_MENU},
+                {ABOUT_ITEM, ABOUT_ITEM},
+                {ABOUT_TITLE, ABOUT_TITLE},
+                {SELECT_FILES, SELECT_FILES},
+                {CHECKING_FILES, CHECKING_FILES},
+                {OPENING_SCRIPT, OPENING_SCRIPT},
+                {SCRIPT_FILTER_DESCRIPTION, SCRIPT_FILTER_DESCRIPTION},
+                {BAD_SCRIPT_TITLE,BAD_SCRIPT_TITLE},
+                {BAD_SCRIPT_MSG_FORMAT,BAD_SCRIPT_MSG_FORMAT},
+                {ALL_OR_SELECTED_FILES_QUESTION,ALL_OR_SELECTED_FILES_QUESTION},
+                {ALL_FILES_OPTION,ALL_FILES_OPTION},
+                {SELECTED_FILES_OPTION,SELECTED_FILES_OPTION},
+                {CANCEL_OPTION,CANCEL_OPTION},
+                {APPLYING_SCRIPT,APPLYING_SCRIPT},
+                {FILE_LOAD_FAILED_TITLE,FILE_LOAD_FAILED_TITLE},
+                {FILE_LOAD_FAILED_FORMAT,FILE_LOAD_FAILED_FORMAT},
+                {TRUNCATE_FORMAT, TRUNCATE_FORMAT},
+        };
     };
 
     static final boolean isMacOS = System.getProperty("mrj.version") != null;
@@ -160,82 +166,83 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
     public static final Preferences prefs = Preferences.userNodeForPackage(DicomBrowser.class);
 
     final class PopupListener extends MouseAdapter {
-	private final JPopupMenu popup;
-	PopupListener(final JPopupMenu popup) {
-	    super();
-	    this.popup = popup;
-	}
+        private final JPopupMenu popup;
+        PopupListener(final JPopupMenu popup) {
+            super();
+            this.popup = popup;
+        }
 
-	@Override
-	public void mousePressed(MouseEvent e) { checkPopup(e); }
+        @Override
+        public void mousePressed(MouseEvent e) { checkPopup(e); }
 
-	@Override
-	public void mouseReleased(MouseEvent e) { checkPopup(e); }
+        @Override
+        public void mouseReleased(MouseEvent e) { checkPopup(e); }
 
-	private void checkPopup(MouseEvent e) {
-	    if (e.isPopupTrigger()) {
-		popup.show(e.getComponent(), e.getX(), e.getY());
-	    }
-	}
+        private void checkPopup(MouseEvent e) {
+            if (e.isPopupTrigger()) {
+                popup.show(e.getComponent(), e.getX(), e.getY());
+            }
+        }
     }
 
     final class CommandAction extends AbstractAction {
-	private static final long serialVersionUID = 1L;
-	private final String name;
+        private static final long serialVersionUID = 1L;
+        private final String name;
 
-	public CommandAction(final String name, final int mnemonic) {
-	    super(name);
-	    this.name = name;
-	    putValue(MNEMONIC_KEY, mnemonic);
-	}
+        public CommandAction(final String name, final int mnemonic) {
+            super(name);
+            this.name = name;
+            putValue(MNEMONIC_KEY, mnemonic);
+        }
 
-	public void actionPerformed(ActionEvent e) {
-	    add(tableModel.addOperations(name, table.getSelectedRows()));
-	}
+        public void actionPerformed(ActionEvent e) {
+            add(tableModel.addOperations(name, table.getSelectedRows()));
+        }
     }
 
     final class UndoAction extends AbstractAction {
-	private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 1L;
 
-	public UndoAction() {
-	    super(rsrcb.getString(UNDO_ITEM));
-	    putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_Z, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-	}
+        public UndoAction() {
+            super(rsrcb.getString(UNDO_ITEM));
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_Z, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+        }
 
-	public void actionPerformed(ActionEvent e) {
-	    final Command c = moveCommand(redoable, redoAction, rsrcb.getString(REDO_ITEM),
-		    undoable, this, rsrcb.getString(UNDO_ITEM));
-	    tableModel.undo(c);
-	}
+        public void actionPerformed(ActionEvent e) {
+            final Command c = moveCommand(redoable, redoAction, rsrcb.getString(REDO_ITEM),
+                    undoable, this, rsrcb.getString(UNDO_ITEM));
+            tableModel.undo(c);
+        }
     }
 
     final class RedoAction extends AbstractAction {
-	private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 1L;
 
-	public RedoAction() {
-	    super(rsrcb.getString(REDO_ITEM));
-	    putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_Y, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-	}
+        public RedoAction() {
+            super(rsrcb.getString(REDO_ITEM));
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_Y, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+        }
 
-	public void actionPerformed(ActionEvent e) {
-	    final Command c = moveCommand(undoable, undoAction, rsrcb.getString(UNDO_ITEM),
-		    redoable, this, rsrcb.getString(REDO_ITEM));
-	    tableModel.redo(c);
-	}
+        public void actionPerformed(ActionEvent e) {
+            final Command c = moveCommand(undoable, undoAction, rsrcb.getString(UNDO_ITEM),
+                    redoable, this, rsrcb.getString(REDO_ITEM));
+            tableModel.redo(c);
+        }
     }
 
     final class AddAction extends AbstractAction {
-	private static final long serialVersionUID = 1L;
-	public AddAction() {
-	    super(rsrcb.getString(ADD_ITEM));
-	    putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_I, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-	}
+        private static final long serialVersionUID = 1L;
+        public AddAction() {
+            super(rsrcb.getString(ADD_ITEM));
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_I, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+        }
 
-	public void actionPerformed(ActionEvent e) {
-	    new AttributeAddDialog(frame, tableModel).setVisible(true);
-	}
+        public void actionPerformed(ActionEvent e) {
+            new AttributeAddDialog(frame, tableModel).setVisible(true);
+        }
     }
 
+    private final Logger logger = LoggerFactory.getLogger(DicomBrowser.class);
     private final Action keepAction, clearAction, deleteAction, addAction;
     private final Action undoAction, redoAction;
     private final ViewSlicesAction viewAction;
@@ -255,7 +262,7 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
      * @return localized String
      */
     public static String getString(final String label) {
-	return rsrcb.getString(label);
+        return rsrcb.getString(label);
     }
 
 
@@ -278,107 +285,107 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
     final StatusBar statusBar;
 
     public DicomBrowser(final JFrame frame, final FileSet fs) {
-	super(new BorderLayout());
-	this.frame = frame;
-
-	
-	treeModel = new FileSetTreeModel(frame, fs);
-	tableModel = new FileSetTableModel(this, fs);
-
-	tree = new JTree(treeModel);
-	tree.setRootVisible(false);
-	tree.setShowsRootHandles(true);
-	tree.addTreeSelectionListener(this);
-	tree.addTreeSelectionListener(tableModel);
-
-	final JScrollPane treeView = new JScrollPane(tree);
-	treeView.setMinimumSize(new Dimension(200,200));
-	treeView.setPreferredSize(new Dimension(200,200));
+        super(new BorderLayout());
+        this.frame = frame;
 
 
-	// Set up Actions: these can be invoked from the menu bar or from a popup.
-	keepAction = new CommandAction(rsrcb.getString(KEEP_ITEM), KeyEvent.VK_K);
-	keepAction.setEnabled(false);
-	needsAttrSelection.add(keepAction);
+        treeModel = new FileSetTreeModel(frame, fs);
+        tableModel = new FileSetTableModel(this, fs);
 
-	clearAction = new CommandAction(rsrcb.getString(CLEAR_ITEM), KeyEvent.VK_C);
-	clearAction.setEnabled(false);
-	needsAttrSelection.add(clearAction);
+        tree = new JTree(treeModel);
+        tree.setRootVisible(false);
+        tree.setShowsRootHandles(true);
+        tree.addTreeSelectionListener(this);
+        tree.addTreeSelectionListener(tableModel);
 
-	deleteAction = new CommandAction(rsrcb.getString(DELETE_ITEM), KeyEvent.VK_D);
-	deleteAction.setEnabled(false);
-	needsAttrSelection.add(deleteAction);
-
-	addAction = new AddAction();
-	addAction.setEnabled(false);
-	needsFileSelection.add(addAction);
-
-	viewAction = new ViewSlicesAction(VIEW_ITEM, fileSelection);
-	viewAction.setEnabled(false);
-	needsFileSelection.add(viewAction);
-
-	closeFilesAction = new CloseFilesAction(treeModel, CLOSE_FILES_ITEM, fileSelection);
-	closeFilesAction.setEnabled(false);
-	needsFileSelection.add(closeFilesAction);
-
-	undoAction = new UndoAction();
-	undoAction.setEnabled(false);
-
-	redoAction = new RedoAction();
-	redoAction.setEnabled(false);
-
-	// Set up the tree popup menu
-	final JPopupMenu treePopup = new JPopupMenu();
-	treePopup.add(new JMenuItem(viewAction));
-	treePopup.add(new JMenuItem(closeFilesAction));
-
-	final MouseListener treePopupListener = new PopupListener(treePopup);
-	tree.addMouseListener(treePopupListener);
-
-	table = new JTable(tableModel) {
-	    private static final long serialVersionUID = 1;
-	    @Override
-	    public boolean isCellEditable(int row, int col) {
-		return col == FileSetTableModel.VALUE_COLUMN;      // only operationFactory is editable
-	    }
-	};
-
-	table.getSelectionModel().addListSelectionListener(this);   // for menu enable/disable
+        final JScrollPane treeView = new JScrollPane(tree);
+        treeView.setMinimumSize(new Dimension(200,200));
+        treeView.setPreferredSize(new Dimension(200,200));
 
 
-	// Set up the table popup menu
-	final JPopupMenu tablePopup = new JPopupMenu();
-	tablePopup.add(new JMenuItem(undoAction));
-	tablePopup.add(new JMenuItem(redoAction));
-	tablePopup.addSeparator();
-	tablePopup.add(new JMenuItem(keepAction));
-	tablePopup.add(new JMenuItem(clearAction));
-	tablePopup.add(new JMenuItem(deleteAction));
-	tablePopup.add(new JMenuItem(addAction));
+        // Set up Actions: these can be invoked from the menu bar or from a popup.
+        keepAction = new CommandAction(rsrcb.getString(KEEP_ITEM), KeyEvent.VK_K);
+        keepAction.setEnabled(false);
+        needsAttrSelection.add(keepAction);
 
-	final MouseListener tablePopupListener = new PopupListener(tablePopup);
-	table.addMouseListener(tablePopupListener);
+        clearAction = new CommandAction(rsrcb.getString(CLEAR_ITEM), KeyEvent.VK_C);
+        clearAction.setEnabled(false);
+        needsAttrSelection.add(clearAction);
+
+        deleteAction = new CommandAction(rsrcb.getString(DELETE_ITEM), KeyEvent.VK_D);
+        deleteAction.setEnabled(false);
+        needsAttrSelection.add(deleteAction);
+
+        addAction = new AddAction();
+        addAction.setEnabled(false);
+        needsFileSelection.add(addAction);
+
+        viewAction = new ViewSlicesAction(VIEW_ITEM, fileSelection);
+        viewAction.setEnabled(false);
+        needsFileSelection.add(viewAction);
+
+        closeFilesAction = new CloseFilesAction(treeModel, CLOSE_FILES_ITEM, fileSelection);
+        closeFilesAction.setEnabled(false);
+        needsFileSelection.add(closeFilesAction);
+
+        undoAction = new UndoAction();
+        undoAction.setEnabled(false);
+
+        redoAction = new RedoAction();
+        redoAction.setEnabled(false);
+
+        // Set up the tree popup menu
+        final JPopupMenu treePopup = new JPopupMenu();
+        treePopup.add(new JMenuItem(viewAction));
+        treePopup.add(new JMenuItem(closeFilesAction));
+
+        final MouseListener treePopupListener = new PopupListener(treePopup);
+        tree.addMouseListener(treePopupListener);
+
+        table = new JTable(tableModel) {
+            private static final long serialVersionUID = 1;
+            @Override
+            public boolean isCellEditable(int row, int col) {
+                return col == FileSetTableModel.VALUE_COLUMN;      // only operationFactory is editable
+            }
+        };
+
+        table.getSelectionModel().addListSelectionListener(this);   // for menu enable/disable
 
 
-	// specialize editing of value column
-	final TableColumn valueCol = table.getColumnModel().getColumn(FileSetTableModel.VALUE_COLUMN);
-	cellEditor = new AttrTableCellEditor(frame, table);
-	tree.addTreeSelectionListener(cellEditor);
-	valueCol.setCellEditor(cellEditor);
+        // Set up the table popup menu
+        final JPopupMenu tablePopup = new JPopupMenu();
+        tablePopup.add(new JMenuItem(undoAction));
+        tablePopup.add(new JMenuItem(redoAction));
+        tablePopup.addSeparator();
+        tablePopup.add(new JMenuItem(keepAction));
+        tablePopup.add(new JMenuItem(clearAction));
+        tablePopup.add(new JMenuItem(deleteAction));
+        tablePopup.add(new JMenuItem(addAction));
 
-	final JScrollPane tableView = new JScrollPane(table);
-	table.setPreferredScrollableViewportSize(new Dimension(600,600));
-	for (int i = 0; i < columnWidths.length; i++)
-	    table.getColumnModel().getColumn(i).setPreferredWidth(columnWidths[i]);
+        final MouseListener tablePopupListener = new PopupListener(tablePopup);
+        table.addMouseListener(tablePopupListener);
 
-	splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-	splitPane.setLeftComponent(treeView);
-	splitPane.setRightComponent(tableView);
-	add(splitPane, BorderLayout.CENTER);
-	frame.addComponentListener(this);
 
-	statusBar = new StatusBar();
-	add(statusBar, BorderLayout.SOUTH);
+        // specialize editing of value column
+        final TableColumn valueCol = table.getColumnModel().getColumn(FileSetTableModel.VALUE_COLUMN);
+        cellEditor = new AttrTableCellEditor(frame, table);
+        tree.addTreeSelectionListener(cellEditor);
+        valueCol.setCellEditor(cellEditor);
+
+        final JScrollPane tableView = new JScrollPane(table);
+        table.setPreferredScrollableViewportSize(new Dimension(600,600));
+        for (int i = 0; i < columnWidths.length; i++)
+            table.getColumnModel().getColumn(i).setPreferredWidth(columnWidths[i]);
+
+        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        splitPane.setLeftComponent(treeView);
+        splitPane.setRightComponent(tableView);
+        add(splitPane, BorderLayout.CENTER);
+        frame.addComponentListener(this);
+
+        statusBar = new StatusBar();
+        add(statusBar, BorderLayout.SOUTH);
     }
 
 
@@ -388,54 +395,54 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
 
     // The main frame has been resized; resize the contents accordingly.
     public void componentResized(final ComponentEvent e) {
-	assert e.getComponent() == frame;
-	final Dimension paned = frame.getContentPane().getSize();
-	final int newHeight = paned.height-statusBar.getSize().height;
-	splitPane.setSize(paned.width, newHeight);
+        assert e.getComponent() == frame;
+        final Dimension paned = frame.getContentPane().getSize();
+        final int newHeight = paned.height-statusBar.getSize().height;
+        splitPane.setSize(paned.width, newHeight);
 
-	final Insets insets = splitPane.getInsets();
-	final int borderHeight = insets.bottom + insets.top + 1;    // why 1? it works.
-	for (int i = 0; i < splitPane.getComponentCount(); i++) {
-	    final Component c = splitPane.getComponent(i);
-	    final Dimension d = c.getSize();
-	    d.height = newHeight - borderHeight;
-	    c.setSize(d);
-	}
+        final Insets insets = splitPane.getInsets();
+        final int borderHeight = insets.bottom + insets.top + 1;    // why 1? it works.
+        for (int i = 0; i < splitPane.getComponentCount(); i++) {
+            final Component c = splitPane.getComponent(i);
+            final Dimension d = c.getSize();
+            d.height = newHeight - borderHeight;
+            c.setSize(d);
+        }
     }
 
     public void actionPerformed(final ActionEvent e) {
-	final String command = e.getActionCommand();
-	if (command.equals(getString(OPEN_ITEM))) {
-	    openFiles(this);
-	} else if (command.equals(getString(OPEN_NEW_WINDOW_ITEM))) {
-	    openFiles(null);
-	} else if (command.equals(getString(SEND_ITEM))) {
-	    cellEditor.stopCellEditing();
-	    final JDialog sendDialog = new CStoreDialog(this, tableModel);
-	    sendDialog.setVisible(true);
-	} else if (command.equals(getString(SAVE_ITEM))) {
-	    cellEditor.stopCellEditing();
-	    final JDialog saveDialog = new SaveDialog(this, tableModel);
-	    saveDialog.setVisible(true);
-	} else if (command.equals(getString(CLOSE_WIN_ITEM))) {
-	    closeBrowser();
-	} else if (command.equals(getString(APPLY_SCRIPT_ITEM))) {
-	    cellEditor.stopCellEditing();
-	    applyScript();
-	} else if (command.equals(getString(ABOUT_ITEM))) {
-	    final JDialog aboutDialog = new AboutDialog(frame, getString(ABOUT_TITLE));
-	    aboutDialog.setVisible(true);
-	} else
-	    throw new RuntimeException("Unimplemented operation: " + command);
+        final String command = e.getActionCommand();
+        if (command.equals(getString(OPEN_ITEM))) {
+            openFiles(this);
+        } else if (command.equals(getString(OPEN_NEW_WINDOW_ITEM))) {
+            openFiles(null);
+        } else if (command.equals(getString(SEND_ITEM))) {
+            cellEditor.stopCellEditing();
+            final JDialog sendDialog = new CStoreDialog(this, tableModel);
+            sendDialog.setVisible(true);
+        } else if (command.equals(getString(SAVE_ITEM))) {
+            cellEditor.stopCellEditing();
+            final JDialog saveDialog = new SaveDialog(this, tableModel);
+            saveDialog.setVisible(true);
+        } else if (command.equals(getString(CLOSE_WIN_ITEM))) {
+            closeBrowser();
+        } else if (command.equals(getString(APPLY_SCRIPT_ITEM))) {
+            cellEditor.stopCellEditing();
+            applyScript();
+        } else if (command.equals(getString(ABOUT_ITEM))) {
+            final JDialog aboutDialog = new AboutDialog(frame, getString(ABOUT_TITLE));
+            aboutDialog.setVisible(true);
+        } else
+            throw new RuntimeException("Unimplemented operation: " + command);
     }
 
 
     public void doCommandOnSelection(final String name) {
-	add(tableModel.addOperations(name, table.getSelectedRows()));
+        add(tableModel.addOperations(name, table.getSelectedRows()));
     }
 
     void clearTreeSelection() {
-	tree.getSelectionModel().clearSelection();
+        tree.getSelectionModel().clearSelection();
     }
 
 
@@ -445,13 +452,13 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
      * @param c Command to be enqueued
      */
     void add(final Command c) {
-	undoable.push(c);
-	undoAction.putValue(Action.NAME, UNDO_ITEM + " " + c.toString());
-	undoAction.setEnabled(true);
+        undoable.push(c);
+        undoAction.putValue(Action.NAME, UNDO_ITEM + " " + c.toString());
+        undoAction.setEnabled(true);
 
-	redoable.clear();
-	redoAction.putValue(Action.NAME, REDO_ITEM);
-	redoAction.setEnabled(false);
+        redoable.clear();
+        redoAction.putValue(Action.NAME, REDO_ITEM);
+        redoAction.setEnabled(false);
     }
 
 
@@ -466,24 +473,24 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
      * @return The Command that was moved
      */
     private static Command moveCommand(final Stack<Command> to, final Action toAction, final String toText,
-	    Stack<Command> from, final Action fromAction, final String fromText) {
-	assert from.size() > 0;
-	final Command c = from.pop();
+            Stack<Command> from, final Action fromAction, final String fromText) {
+        assert from.size() > 0;
+        final Command c = from.pop();
 
-	if (from.isEmpty()) {
-	    fromAction.putValue(Action.NAME, fromText);
-	    fromAction.setEnabled(false);
-	} else {
-	    fromAction.putValue(Action.NAME, fromText + " " + from.peek().toString());
-	    assert fromAction.isEnabled();
-	}
+        if (from.isEmpty()) {
+            fromAction.putValue(Action.NAME, fromText);
+            fromAction.setEnabled(false);
+        } else {
+            fromAction.putValue(Action.NAME, fromText + " " + from.peek().toString());
+            assert fromAction.isEnabled();
+        }
 
-	to.push(c);
+        to.push(c);
 
-	toAction.putValue(Action.NAME, toText + " " + c.toString());
-	toAction.setEnabled(true);
+        toAction.putValue(Action.NAME, toText + " " + c.toString());
+        toAction.setEnabled(true);
 
-	return c;
+        return c;
     }
 
 
@@ -491,10 +498,10 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
      * Some menu items are enabled only if some attributes are selected
      */
     public void valueChanged(ListSelectionEvent e) {
-	final ListSelectionModel lsm = (ListSelectionModel)e.getSource();
-	final boolean notEmpty = !lsm.isSelectionEmpty();
-	for (final Action action : needsAttrSelection)
-	    action.setEnabled(notEmpty);
+        final ListSelectionModel lsm = (ListSelectionModel)e.getSource();
+        final boolean notEmpty = !lsm.isSelectionEmpty();
+        for (final Action action : needsAttrSelection)
+            action.setEnabled(notEmpty);
     }
 
 
@@ -503,33 +510,33 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
      */
     private final Collection<TreePath> fileSelection = new HashSet<TreePath>();
     public void valueChanged(final TreeSelectionEvent e) {
-	final TreePath[] tps = e.getPaths();
-	for (int i = 0; i < tps.length; i++)
-	    if (e.isAddedPath(i)) {
-		fileSelection.add(tps[i]);
-	    } else {
-		fileSelection.remove(tps[i]);
-	    }
+        final TreePath[] tps = e.getPaths();
+        for (int i = 0; i < tps.length; i++)
+            if (e.isAddedPath(i)) {
+                fileSelection.add(tps[i]);
+            } else {
+                fileSelection.remove(tps[i]);
+            }
 
-	final boolean someSelected = !fileSelection.isEmpty();
-	for (final Action action : needsFileSelection) {
-	    action.setEnabled(someSelected);
-	}
+        final boolean someSelected = !fileSelection.isEmpty();
+        for (final Action action : needsFileSelection) {
+            action.setEnabled(someSelected);
+        }
     }
 
 
     private void add(final File[] files) {
-	assert !SwingUtilities.isEventDispatchThread();
-	treeModel.add(Arrays.asList(files));
-	if (treeModel.getChildCount(treeModel.getRoot()) > 0) {
-	    // now there are some files, so we can save or send them.
-	    SwingUtilities.invokeLater(new Runnable() {
-		public void run() {
-		    sendItem.setEnabled(true);
-		    saveItem.setEnabled(true);
-		}
-	    });
-	}
+        assert !SwingUtilities.isEventDispatchThread();
+        treeModel.add(Arrays.asList(files));
+        if (treeModel.getChildCount(treeModel.getRoot()) > 0) {
+            // now there are some files, so we can save or send them.
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    sendItem.setEnabled(true);
+                    saveItem.setEnabled(true);
+                }
+            });
+        }
     }
 
 
@@ -539,71 +546,87 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
      *
      */
     private void applyScript() {
-	final JFileChooser fc = new JFileChooser(prefs.get(SCRIPT_DIR_PREF, null));
-	fc.addChoosableFileFilter(new FileFilter() {
-	    @Override
-	    public boolean accept(final File f) {
-		return f.isDirectory() || f.getName().endsWith(SCRIPT_SUFFIX);
-	    }
-	    @Override
-	    public String getDescription() {
-		return SCRIPT_FILTER_DESCRIPTION;
-	    }
-	});
-	fc.setDialogTitle(getString(OPENING_SCRIPT));
-	fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        final JFileChooser fc = new JFileChooser(prefs.get(SCRIPT_DIR_PREF, null));
+        fc.addChoosableFileFilter(new FileFilter() {
+            @Override
+            public boolean accept(final File f) {
+                return f.isDirectory() || f.getName().endsWith(SCRIPT_SUFFIX);
+            }
+            @Override
+            public String getDescription() {
+                return SCRIPT_FILTER_DESCRIPTION;
+            }
+        });
+        fc.setDialogTitle(getString(OPENING_SCRIPT));
+        fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-	if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-	    prefs.put(SCRIPT_DIR_PREF, fc.getCurrentDirectory().getPath());
-	    final ScriptApplicator applicator;
-	    try {
-		final FileInputStream fin = new FileInputStream(fc.getSelectedFile());
-		try {
-		    applicator = new ScriptApplicator(fin);
-		} finally {
-		    fin.close();
-		}
-	    } catch (Throwable t) {
-		JOptionPane.showMessageDialog(frame,
-			String.format(getString(BAD_SCRIPT_MSG_FORMAT), t.getMessage()),
-			getString(BAD_SCRIPT_TITLE),
-			JOptionPane.ERROR_MESSAGE);
-		return;
-	    }
+        if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            prefs.put(SCRIPT_DIR_PREF, fc.getCurrentDirectory().getPath());
+            final ScriptApplicator applicator;
+            try {
+                IOException ioexception = null;
+                final FileInputStream fin = new FileInputStream(fc.getSelectedFile());
+                try {
+                    applicator = new ScriptApplicator(fin);
+                } catch (IOException e) {
+                    throw ioexception = e;
+                } finally {
+                    try {
+                        fin.close();
+                    } catch (IOException e) {
+                        if (null == ioexception) {
+                            throw e;
+                        } else {
+                            logger.warn("unable to close script applicator", e);
+                            throw ioexception;
+                        }
+                    }
+                }
+            } catch (Throwable t) {
+                JOptionPane.showMessageDialog(frame,
+                        String.format(getString(BAD_SCRIPT_MSG_FORMAT), t.getMessage()),
+                        getString(BAD_SCRIPT_TITLE),
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-	    final String[] options = {
-		    getString(ALL_FILES_OPTION), getString(SELECTED_FILES_OPTION), getString(CANCEL_OPTION) 
-	    };
-	    final int option = JOptionPane.showOptionDialog(frame,
-		    getString(ALL_OR_SELECTED_FILES_QUESTION), getString(OPENING_SCRIPT), 
-		    JOptionPane.YES_NO_CANCEL_OPTION,
-		    JOptionPane.QUESTION_MESSAGE, null,
-		    options, options[2]);
+            final String[] options = {
+                    getString(ALL_FILES_OPTION), getString(SELECTED_FILES_OPTION), getString(CANCEL_OPTION) 
+            };
+            final int option = JOptionPane.showOptionDialog(frame,
+                    getString(ALL_OR_SELECTED_FILES_QUESTION), getString(OPENING_SCRIPT), 
+                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    JOptionPane.QUESTION_MESSAGE, null,
+                    options, options[2]);
 
-	    switch (option) {
-	    case 0:
-	    case 1:
-		final ProgressMonitor pm = new ProgressMonitor(this, rsrcb.getString(APPLYING_SCRIPT),
-			null, 0, 100);      // the thread will set the bounds.
+            switch (option) {
+            case 0:
+            case 1:
+                final Map<?,?> template= null;
+                if (SessionVariablePanel.withAssignedVariables(applicator.getSortedVariables(), tableModel.asMultimap())) {
+                    final ProgressMonitor pm = new ProgressMonitor(this,
+                            rsrcb.getString(APPLYING_SCRIPT),
+                            null, 0, 100);      // the thread will set the bounds.
 
-		// Generate a Command, apply it, and add it to the undo list.
-		final Runnable commandWorker = new Runnable() {
-		    public void run() {
-			final Command command =
-			    tableModel.doScript(applicator.getStatements(), 1==option, pm);
-			if (command != null) {
-			    add(command);
-			}
-		    }
-		};
-		new Thread(commandWorker).start();
-		break;
+                    // Generate a Command, apply it, and add it to the undo list.
+                    final Runnable commandWorker = new Runnable() {
+                        public void run() {
+                            final Command command =
+                                tableModel.doScript(applicator.getStatements(), 1==option, pm);
+                            if (command != null) {
+                                add(command);
+                            }
+                        }
+                    };
+                    new Thread(commandWorker).start();
+                }
+                break;
 
-	    case 2:
-	    default:
-		return;
-	    }
-	}
+                case 2:
+                default:
+                    return;
+            }
+        }
     }
 
 
@@ -612,40 +635,40 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
      * @author Kevin A. Archie <karchie@npg.wustl.edu>
      */
     private static final class FileSetReader implements Runnable {
-	private final File[] files;
-	private final DicomBrowser browser;
-	FileSetReader(final DicomBrowser browser, final File[] files) {
-	    this.files = files;
-	    this.browser = browser;
-	}
-	public void run() {
-	    if (browser == null) {
-		final FileSet fs;
-		try {
-		    fs = new FileSet(files, true, SwingProgressMonitor.getMonitor(null, rsrcb.getString(CHECKING_FILES), "", 0, 100));
-		    fs.setMaxValueLength(prefs.getInt(MAX_LEN_PREF, defaultMaxValueLen));
-		    fs.setTruncateFormat(rsrcb.getString(TRUNCATE_FORMAT));
-		} catch (IOException e) {
-		    JOptionPane.showMessageDialog(null,
-			    String.format(FILE_LOAD_FAILED_FORMAT, e.getMessage()),
-			    FILE_LOAD_FAILED_TITLE,
-			    JOptionPane.ERROR_MESSAGE);
-		    return;
-		} catch (SQLException e) {
-		    JOptionPane.showMessageDialog(null,
-			    String.format(FILE_LOAD_FAILED_FORMAT, e.getMessage()),
-			    FILE_LOAD_FAILED_TITLE,
-			    JOptionPane.ERROR_MESSAGE);
-		    return;
+        private final File[] files;
+        private final DicomBrowser browser;
+        FileSetReader(final DicomBrowser browser, final File[] files) {
+            this.files = files;
+            this.browser = browser;
+        }
+        public void run() {
+            if (browser == null) {
+                final FileSet fs;
+                try {
+                    fs = new FileSet(files, true, SwingProgressMonitor.getMonitor(null, rsrcb.getString(CHECKING_FILES), "", 0, 100));
+                    fs.setMaxValueLength(prefs.getInt(MAX_LEN_PREF, defaultMaxValueLen));
+                    fs.setTruncateFormat(rsrcb.getString(TRUNCATE_FORMAT));
+                } catch (IOException e) {
+                    JOptionPane.showMessageDialog(null,
+                            String.format(FILE_LOAD_FAILED_FORMAT, e.getMessage()),
+                            FILE_LOAD_FAILED_TITLE,
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                } catch (SQLException e) {
+                    JOptionPane.showMessageDialog(null,
+                            String.format(FILE_LOAD_FAILED_FORMAT, e.getMessage()),
+                            FILE_LOAD_FAILED_TITLE,
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
 
-		}
-		SwingUtilities.invokeLater(new Runnable() {
-		    public void run() { createAndShowGUI(fs); }
-		});
-	    } else {
-		browser.add(files);
-	    }
-	}
+                }
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() { createAndShowGUI(fs); }
+                });
+            } else {
+                browser.add(files);
+            }
+        }
     }
 
     /**
@@ -654,26 +677,26 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
      * @param files List of files to be opened (if null or zero size, opens a Chooser)
      */
     private static void openFiles(final DicomBrowser browser, final File...files) {
-	// need to be in Swing thread to use chooseFiles
-	if (files == null || files.length == 0) {
-	    SwingUtilities.invokeLater(new Runnable() {
-		public void run() {
-		    final JFrame frame = browser == null ? null : browser.frame;
-		    final File[] chosen = chooseFiles(frame);
-		    if (chosen != null && chosen.length > 0)
-			new Thread(new FileSetReader(browser, chosen)).start();
-		}
-	    });
-	} else {
-	    new Thread(new FileSetReader(browser, files)).start();
-	}
+        // need to be in Swing thread to use chooseFiles
+        if (files == null || files.length == 0) {
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    final JFrame frame = browser == null ? null : browser.frame;
+                    final File[] chosen = chooseFiles(frame);
+                    if (chosen != null && chosen.length > 0)
+                        new Thread(new FileSetReader(browser, chosen)).start();
+                }
+            });
+        } else {
+            new Thread(new FileSetReader(browser, files)).start();
+        }
     }
 
     public JFrame getFrame() { return frame; }
 
     private void closeBrowser() {
-	frame.dispose();
-	tableModel.dispose();
+        frame.dispose();
+        tableModel.dispose();
     }
 
     /**
@@ -681,106 +704,106 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
      * This must be executed in the Swing thread
      */
     private static void createAndShowGUI(final FileSet fs) {
-	final JFrame frame = new JFrame("DICOM browser");
-	InterfaceCounter.getInstance().register(frame);
-	frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-	
-	//mzheng: adding icon
-	frame.setIconImage(new ImageIcon(ClassLoader.getSystemResource("icon.png")).getImage());
+        final JFrame frame = new JFrame("DICOM browser");
+        InterfaceCounter.getInstance().register(frame);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-	final DicomBrowser browser = new DicomBrowser(frame, fs);
-	browser.setOpaque(true);
-	frame.setContentPane(browser);
+        //mzheng: adding icon
+        frame.setIconImage(new ImageIcon(ClassLoader.getSystemResource("icon.png")).getImage());
 
-	final JMenuBar menuBar = new JMenuBar();
-	frame.setJMenuBar(menuBar);
-	final JMenu fileMenu = new JMenu(rsrcb.getString(FILE_MENU));
-	fileMenu.setMnemonic(KeyEvent.VK_F);
-	menuBar.add(fileMenu);
+        final DicomBrowser browser = new DicomBrowser(frame, fs);
+        browser.setOpaque(true);
+        frame.setContentPane(browser);
 
-	final JMenuItem openItem = new JMenuItem(rsrcb.getString(OPEN_ITEM));
-	openItem.setMnemonic(KeyEvent.VK_O);
-	openItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-	openItem.addActionListener(browser);
-	fileMenu.add(openItem);
+        final JMenuBar menuBar = new JMenuBar();
+        frame.setJMenuBar(menuBar);
+        final JMenu fileMenu = new JMenu(rsrcb.getString(FILE_MENU));
+        fileMenu.setMnemonic(KeyEvent.VK_F);
+        menuBar.add(fileMenu);
 
-	final JMenuItem openNewWinItem = new JMenuItem(rsrcb.getString(OPEN_NEW_WINDOW_ITEM));
-	openNewWinItem.setMnemonic(KeyEvent.VK_N);
-	openNewWinItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-	openNewWinItem.addActionListener(browser);
-	fileMenu.add(openNewWinItem);
+        final JMenuItem openItem = new JMenuItem(rsrcb.getString(OPEN_ITEM));
+        openItem.setMnemonic(KeyEvent.VK_O);
+        openItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+        openItem.addActionListener(browser);
+        fileMenu.add(openItem);
 
-	fileMenu.add(new JMenuItem(browser.closeFilesAction));
+        final JMenuItem openNewWinItem = new JMenuItem(rsrcb.getString(OPEN_NEW_WINDOW_ITEM));
+        openNewWinItem.setMnemonic(KeyEvent.VK_N);
+        openNewWinItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+        openNewWinItem.addActionListener(browser);
+        fileMenu.add(openNewWinItem);
 
-	fileMenu.addSeparator();
+        fileMenu.add(new JMenuItem(browser.closeFilesAction));
 
-	browser.sendItem = new JMenuItem(rsrcb.getString(SEND_ITEM));
-	browser.sendItem.setMnemonic(KeyEvent.VK_E);
-	browser.sendItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-	browser.sendItem.addActionListener(browser);
-	fileMenu.add(browser.sendItem);
+        fileMenu.addSeparator();
 
-	browser.saveItem = new JMenuItem(rsrcb.getString(SAVE_ITEM));
-	browser.saveItem.setMnemonic(KeyEvent.VK_S);
-	browser.saveItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-	browser.saveItem.addActionListener(browser);
-	fileMenu.add(browser.saveItem);
+        browser.sendItem = new JMenuItem(rsrcb.getString(SEND_ITEM));
+        browser.sendItem.setMnemonic(KeyEvent.VK_E);
+        browser.sendItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+        browser.sendItem.addActionListener(browser);
+        fileMenu.add(browser.sendItem);
 
-	try {
-	    if (0 == fs.size()) {
-		browser.sendItem.setEnabled(false);
-		browser.saveItem.setEnabled(false);
-	    }
-	} catch (SQLException e) {
-	    browser.sendItem.setEnabled(false);
-	    browser.saveItem.setEnabled(false);
-	}
+        browser.saveItem = new JMenuItem(rsrcb.getString(SAVE_ITEM));
+        browser.saveItem.setMnemonic(KeyEvent.VK_S);
+        browser.saveItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+        browser.saveItem.addActionListener(browser);
+        fileMenu.add(browser.saveItem);
 
-	fileMenu.addSeparator();
+        try {
+            if (0 == fs.size()) {
+                browser.sendItem.setEnabled(false);
+                browser.saveItem.setEnabled(false);
+            }
+        } catch (SQLException e) {
+            browser.sendItem.setEnabled(false);
+            browser.saveItem.setEnabled(false);
+        }
 
-	final JMenuItem closeItem = new JMenuItem(rsrcb.getString(CLOSE_WIN_ITEM));
-	closeItem.setMnemonic(KeyEvent.VK_C);
-	closeItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-	closeItem.addActionListener(browser);
-	fileMenu.add(closeItem);
+        fileMenu.addSeparator();
 
-	final JMenu editMenu = new JMenu(rsrcb.getString(EDIT_MENU));
-	editMenu.setMnemonic(KeyEvent.VK_E);
-	menuBar.add(editMenu);
+        final JMenuItem closeItem = new JMenuItem(rsrcb.getString(CLOSE_WIN_ITEM));
+        closeItem.setMnemonic(KeyEvent.VK_C);
+        closeItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+        closeItem.addActionListener(browser);
+        fileMenu.add(closeItem);
 
-	editMenu.add(new JMenuItem(browser.undoAction));
-	editMenu.add(new JMenuItem(browser.redoAction));
-	editMenu.addSeparator();
-	editMenu.add(new JMenuItem(browser.keepAction));
-	editMenu.add(new JMenuItem(browser.clearAction));
-	editMenu.add(new JMenuItem(browser.deleteAction));
-	editMenu.add(new JMenuItem(browser.addAction));
-	editMenu.addSeparator();
+        final JMenu editMenu = new JMenu(rsrcb.getString(EDIT_MENU));
+        editMenu.setMnemonic(KeyEvent.VK_E);
+        menuBar.add(editMenu);
 
-	final JMenuItem applyScriptItem = new JMenuItem(rsrcb.getString(APPLY_SCRIPT_ITEM));
-	applyScriptItem.setMnemonic(KeyEvent.VK_A);
-	applyScriptItem.addActionListener(browser);
-	editMenu.add(applyScriptItem);
+        editMenu.add(new JMenuItem(browser.undoAction));
+        editMenu.add(new JMenuItem(browser.redoAction));
+        editMenu.addSeparator();
+        editMenu.add(new JMenuItem(browser.keepAction));
+        editMenu.add(new JMenuItem(browser.clearAction));
+        editMenu.add(new JMenuItem(browser.deleteAction));
+        editMenu.add(new JMenuItem(browser.addAction));
+        editMenu.addSeparator();
 
-	final JMenu viewMenu = new JMenu(rsrcb.getString(VIEW_MENU));
-	menuBar.add(viewMenu);
-	viewMenu.add(new JMenuItem(browser.viewAction));
+        final JMenuItem applyScriptItem = new JMenuItem(rsrcb.getString(APPLY_SCRIPT_ITEM));
+        applyScriptItem.setMnemonic(KeyEvent.VK_A);
+        applyScriptItem.addActionListener(browser);
+        editMenu.add(applyScriptItem);
 
-	if (isMacOS) {
-	    new MacOSAppEventHandler(browser.frame, ABOUT_TITLE);
-	} else {
-	    final JMenu helpMenu = new JMenu(rsrcb.getString(HELP_MENU));
-	    helpMenu.setMnemonic(KeyEvent.VK_H);
-	    menuBar.add(helpMenu);
+        final JMenu viewMenu = new JMenu(rsrcb.getString(VIEW_MENU));
+        menuBar.add(viewMenu);
+        viewMenu.add(new JMenuItem(browser.viewAction));
 
-	    final JMenuItem aboutItem = new JMenuItem(ABOUT_ITEM);
-	    aboutItem.setMnemonic(KeyEvent.VK_A);
-	    aboutItem.addActionListener(browser);
-	    helpMenu.add(aboutItem);
-	}
+        if (isMacOS) {
+            new MacOSAppEventHandler(browser.frame, ABOUT_TITLE);
+        } else {
+            final JMenu helpMenu = new JMenu(rsrcb.getString(HELP_MENU));
+            helpMenu.setMnemonic(KeyEvent.VK_H);
+            menuBar.add(helpMenu);
 
-	frame.pack();
-	frame.setVisible(true);
+            final JMenuItem aboutItem = new JMenuItem(ABOUT_ITEM);
+            aboutItem.setMnemonic(KeyEvent.VK_A);
+            aboutItem.addActionListener(browser);
+            helpMenu.add(aboutItem);
+        }
+
+        frame.pack();
+        frame.setVisible(true);
     }
 
     /**
@@ -788,38 +811,38 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
      * This must be executed in the Swing thread
      */
     private static File[] chooseFiles(Component parent) {
-	final JFileChooser fc = new JFileChooser(prefs.get(OPEN_DIR_PREF, null));
-	fc.setDialogTitle(SELECT_FILES);
-	fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-	fc.setMultiSelectionEnabled(true);
-	if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-	    prefs.put(OPEN_DIR_PREF, fc.getCurrentDirectory().getPath());
-	    return fc.getSelectedFiles();
-	} else
-	    return null;
+        final JFileChooser fc = new JFileChooser(prefs.get(OPEN_DIR_PREF, null));
+        fc.setDialogTitle(SELECT_FILES);
+        fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        fc.setMultiSelectionEnabled(true);
+        if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+            prefs.put(OPEN_DIR_PREF, fc.getCurrentDirectory().getPath());
+            return fc.getSelectedFiles();
+        } else
+            return null;
     }
 
 
     public static void main(final String[] args) {
-	// if DicomBrowser.value.maxlen is set, assign the maximum value length preference
-	final String maxValueLen = System.getProperty("DicomBrowser." + MAX_LEN_PREF);
-	if (null != maxValueLen) {
-	    prefs.putInt(MAX_LEN_PREF, Integer.parseInt(maxValueLen));
-	}
+        // if DicomBrowser.value.maxlen is set, assign the maximum value length preference
+        final String maxValueLen = System.getProperty("DicomBrowser." + MAX_LEN_PREF);
+        if (null != maxValueLen) {
+            prefs.putInt(MAX_LEN_PREF, Integer.parseInt(maxValueLen));
+        }
 
-	SwingUtilities.invokeLater(new Runnable() {
-	    public void run() { 
-		try {
-		    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (Exception e) {} // no big deal, we'll use default instead.
-	    }
-	});
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() { 
+                try {
+                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                } catch (Exception e) {} // no big deal, we'll use default instead.
+            }
+        });
 
-	final File[] files = new File[args.length];
-	for (int i = 0; i < args.length; i++) {
-	    files[i] = new File(args[i]);
-	}
+        final File[] files = new File[args.length];
+        for (int i = 0; i < args.length; i++) {
+            files[i] = new File(args[i]);
+        }
 
-	new FileSetReader(null, files).run();
+        new FileSetReader(null, files).run();
     }
 }

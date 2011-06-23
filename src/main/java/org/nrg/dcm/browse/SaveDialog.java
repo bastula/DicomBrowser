@@ -189,11 +189,11 @@ final class SaveDialog extends JDialog implements ActionListener {
         final String arg = argTextField.getText();
         switch (whereComboBox.getSelectedIndex()) {
         case 0:         // adjacent directory
-          model.saveInAdjacentDir(arg, allFiles);
+          model.saveInAdjacentDir("%s" + arg, allFiles);
           break;
 
         case 1:         // adjacent file
-          model.saveInAdjacentFile(arg, allFiles);
+          model.saveInAdjacentFile("%s" + arg, allFiles);
           break;
           
         case 2:         // new root
