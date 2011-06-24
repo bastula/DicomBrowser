@@ -5,43 +5,37 @@ package org.nrg.dcm.browse;
 
 import java.io.File;
 import java.io.IOException;
-
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
-import java.util.LinkedList;
 import java.util.ListIterator;
+import java.util.ListResourceBundle;
+import java.util.Map;
 import java.util.Queue;
+import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.HashSet;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.TreeMap;
-import java.util.ResourceBundle;
-import java.util.ListResourceBundle;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.tree.TreePath;
-import javax.swing.event.TreeSelectionListener;
-import javax.swing.event.TreeSelectionEvent;
 
 import org.dcm4che2.data.Tag;
 import org.dcm4che2.net.TransferCapability;
 import org.dcm4che2.util.TagUtils;
-
 import org.nrg.attr.ConversionFailureException;
+import org.nrg.dcm.DirectoryRecord;
 import org.nrg.dcm.FileSet;
 import org.nrg.dcm.ProgressMonitorI;
-import org.nrg.dcm.DirectoryRecord;
 import org.nrg.dcm.edit.Assignment;
 import org.nrg.dcm.edit.Constraint;
 import org.nrg.dcm.edit.Deletion;
@@ -62,8 +56,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Sets;
 
 
 /**
@@ -77,7 +73,7 @@ implements TreeSelectionListener {
 
     private final Logger logger = LoggerFactory.getLogger(FileSetTableModel.class);
 
-    private static String colNames[] = {"tag", "name", "action", "value"};
+    private static final String colNames[] = {"tag", "name", "action", "value"};
     private static final String SENDING_FILES = "Sending files...";
     private static final String WRITING_FILES = "Writing files...";
     private static final String READING_VALS_FORMAT = "Reading values...%1$s";
@@ -124,8 +120,8 @@ implements TreeSelectionListener {
 
     private final Executor executor = Executors.newCachedThreadPool();
     private final FileSet fs;
-    private final Set<TreePath> fileSelection = new HashSet<TreePath>();
-    private final Set<File> selectedFiles = new HashSet<File>();
+    private final Set<TreePath> fileSelection = Sets.newLinkedHashSet();
+    private final Set<File> selectedFiles = Sets.newLinkedHashSet();
     private final Map<Integer,Map<File,Operation>> allOps = Maps.newHashMap();
     private final DicomBrowser browser;
 
@@ -168,7 +164,7 @@ implements TreeSelectionListener {
     }
 
     private void collectReferencedFiles(final DirectoryRecord root, final Set<File> files) {
-        final Queue<DirectoryRecord> records = new LinkedList<DirectoryRecord>();
+        final Queue<DirectoryRecord> records = Lists.newLinkedList();
         records.add(root);
         while (records.peek() != null) {
             final DirectoryRecord dr = records.poll();
@@ -179,12 +175,11 @@ implements TreeSelectionListener {
         }
     }
 
-    private void updateValues(final Map<Integer,Set<String>> vals, final Collection<Integer> modified) {
+    private void updateValues(final SetMultimap<Integer,String> vals, final Collection<Integer> modified) {
         assert vals.keySet().containsAll(modified);
-        final LinkedList<MultiValueAttribute> newContents = new LinkedList<MultiValueAttribute>();
-        for (final Map.Entry<Integer,Set<String>> e : vals.entrySet()) {
-            final int tag = e.getKey();
-            newContents.add(new MultiValueAttribute(tag, modified.contains(tag), e.getValue().toArray(new String[0])));
+        final Collection<MultiValueAttribute> newContents = Lists.newArrayList();
+        for (final Integer tag : vals.keySet()) {
+            newContents.add(new MultiValueAttribute(tag, modified.contains(tag), vals.get(tag).toArray(new String[0])));
         }
         contents = newContents.toArray(new MultiValueAttribute[0]);
         fireTableDataChanged();
@@ -210,14 +205,15 @@ implements TreeSelectionListener {
                 final DirectoryRecord dr = (DirectoryRecord)tp.getLastPathComponent();
                 collectReferencedFiles(dr, selectedFiles);
             }
-            localSelectedFiles = new LinkedList<File>(selectedFiles);
+            localSelectedFiles = Lists.newArrayList(selectedFiles);
         }
 
-        final Map<Integer,Set<String>> vals = new TreeMap<Integer,Set<String>>();
-        final Collection<Integer> modified = new HashSet<Integer>();
+        final SetMultimap<Integer,String> vals = LinkedHashMultimap.create();
+        final Set<Integer> modified = Sets.newHashSet();
 
-        if (wipeTableFirst)
+        if (wipeTableFirst) {
             updateValues(vals, modified);
+        }
         long lastUpdate = new Date().getTime() - CONTENTS_UPDATE_INTERVAL + CONTENTS_SHOW_INTERVAL;
 
         cachingProgress = browser.statusBar.getTaskMonitor(0, localSelectedFiles.size(),
@@ -231,10 +227,10 @@ implements TreeSelectionListener {
 
             final Map<Integer,String> fv;
             try {
-                final Map<Integer,ConversionFailureException> failures = new LinkedHashMap<Integer,ConversionFailureException>();
+                final Map<Integer,ConversionFailureException> failures = Maps.newLinkedHashMap();
                 fv = fs.getValuesFromFile(file, 0, MAXTAG, failures);
                 if (!failures.isEmpty()) {
-                    logger.error("Conversion errors reading " + file + ": " + failures);
+                    logger.error("Conversion errors reading {} : {}", file, failures);
                     continue; // move on to next file
                 }
             } catch (IOException e) {
@@ -264,22 +260,19 @@ implements TreeSelectionListener {
             // Build the values for the fileSelection with operations applied
             // Some operations may add new attributes, so the complete set of tags
             // comes from both the files and the operations.
-            final Collection<Integer> tags = new TreeSet<Integer>(fv.keySet());
+            final SortedSet<Integer> tags = Sets.newTreeSet(fv.keySet());
             tags.addAll(allOps.keySet());
             for (final int tag : tags) {
-                if (!vals.containsKey(tag)) {
-                    vals.put(tag, new HashSet<String>());
-                }
                 if (allOps.containsKey(tag) && allOps.get(tag).containsKey(file)) {
                     modified.add(tag);
                     try {
                         final String val = allOps.get(tag).get(file).apply(fv);
-                        vals.get(tag).add(null == val ? rsrcb.getString("deleted") : val);
+                        vals.put(tag, null == val ? rsrcb.getString("deleted") : val);
                     } catch (ScriptEvaluationException e) {
                         logger.error("error applying script", e);
                     }
                 } else {
-                    vals.get(tag).add(fv.get(tag));
+                    vals.put(tag, fv.get(tag));
                 }
             }
 
@@ -301,13 +294,14 @@ implements TreeSelectionListener {
     public void valueChanged(TreeSelectionEvent e) {
         final TreePath[] tps = e.getPaths();
         boolean needsWipe = false;
-        for (int i = 0; i < tps.length; i++)
-            if (e.isAddedPath(i))
+        for (int i = 0; i < tps.length; i++) {
+            if (e.isAddedPath(i)) {
                 fileSelection.add(tps[i]);
-            else {
+            } else {
                 needsWipe = true;       // some of the attributes now displayed may be gone
                 fileSelection.remove(tps[i]);
             }
+        }
 
         // Change the table contents to reflect the new fileSelection.
         // This is a little time-consuming, so we do it in a separate thread.
@@ -347,29 +341,30 @@ implements TreeSelectionListener {
             switch (columnIndex) {
             case 0: return contents[rowIndex].getTagString();
             case 1: return contents[rowIndex].getNameString();
+            
             case ACTION_COLUMN: {
                 final int tag = contents[rowIndex].getTag();
-                final Set<Operation> ops = new HashSet<Operation>();
+                final Set<Operation> ops = Sets.newHashSet();
                 synchronized(selectedFiles) {
-                    for (File file : selectedFiles) {
+                    for (final File file : selectedFiles) {
                         if (allOps.containsKey(tag)) {
                             ops.add(allOps.get(tag).get(file));  // null here = KEEP
                         } else {
                             ops.add(null);       // implicit KEEP
                         }
-                        if (ops.size() > 1)
+                        if (ops.size() > 1) {
                             return OperationFactory.getMultipleName();
+                        }
                     }
                 }
                 assert ops.size() == 1;
-                for (Operation op : ops) {
-                    return (op == null) ? OperationFactory.getDefaultName() : op.getName();
-                }
-                assert false;
-                return null;
+                final Operation op = ops.iterator().next();
+                return null == op ? OperationFactory.getDefaultName() : op.getName();
             }
+            
             case VALUE_COLUMN: return contents[rowIndex];
-            default: assert false : "column index out of range"; return null;
+            
+            default: throw new IndexOutOfBoundsException("bad column index");
             }
         }
     }
@@ -378,8 +373,9 @@ implements TreeSelectionListener {
     @Override
     public void setValueAt(final Object o, final int row, final int col) {
         assert VALUE_COLUMN == col;
-        if (o == null) return;      // this can happen when an editing operation is canceled
-        if (o instanceof Operation) {
+        if (o == null) {
+            return;      // this can happen when an editing operation is canceled
+        } else if (o instanceof Operation) {
             doOperation((Operation)o);
         } else if (o instanceof String) {
             // If this attribute has a single value over the fileSelection,
@@ -461,7 +457,7 @@ implements TreeSelectionListener {
             } catch (ScriptEvaluationException e) {
                 v = null;
             }
-            final LinkedList<MultiValueAttribute> tcontents = new LinkedList<MultiValueAttribute>(Arrays.asList(contents));
+            final List<MultiValueAttribute> tcontents = Lists.newArrayList(contents);
             final MultiValueAttribute value = new MultiValueAttribute(tag, true, v);
             int newRow = -1;
             for (final ListIterator<MultiValueAttribute> i = tcontents.listIterator(); i.hasNext();) {
@@ -535,7 +531,7 @@ implements TreeSelectionListener {
      * @return Command representing this script action
      */
     public Command doScript(final StatementList statements, final boolean onlySelected, ProgressMonitor pm) {
-        final Map<Operation,Set<File>> ops = new HashMap<Operation,Set<File>>();
+        final SetMultimap<Operation,File> ops = LinkedHashMultimap.create();
         final Map<Integer,Map<File,Operation>> replaced = new HashMap<Integer,Map<File,Operation>>();
 
         if (null == statements) {
@@ -560,11 +556,8 @@ implements TreeSelectionListener {
             try {
                 for (final Object opo : statements.getOperations(file)) {
                     final Operation op = (Operation)opo;
-                    if (!ops.containsKey(op)) {
-                        ops.put(op, new HashSet<File>());
-                    }
                     replaced.put(op.getTag(), addOperation(op, file));
-                    ops.get(op).add(file);
+                    ops.put(op, file);
                 }
             } catch (IOException e) { // TODO: localize
                 JOptionPane.showMessageDialog(browser.getFrame(),
@@ -590,9 +583,10 @@ implements TreeSelectionListener {
      * @param c
      */
     private void refreshAfterCommand(final Command c) {
-        final Set<File> files = new HashSet<File>(c.getAllFiles());
-        for (final Map<File,Operation> map : c.getReplaced().values())
+        final Set<File> files = Sets.newHashSet(c.getAllFiles());
+        for (final Map<File,Operation> map : c.getReplaced().values()) {
             files.addAll(map.keySet());
+        }
 
         files.retainAll(selectedFiles);
 
@@ -608,8 +602,9 @@ implements TreeSelectionListener {
      */
     public void redo(final Command c) {
         final Operation[] ops = c.getOperations();
-        for (int i = 0; i < ops.length; i++)
+        for (int i = 0; i < ops.length; i++) {
             addOperation(ops[i], c.getFiles(i));
+        }
         refreshAfterCommand(c);
     }
 
@@ -620,15 +615,16 @@ implements TreeSelectionListener {
      */
     public void undo(final Command c) {
         // Clear operation
-        Set<Map.Entry<File,Operation>> restoredOps = new HashSet<Map.Entry<File,Operation>>();
+        Set<Map.Entry<File,Operation>> restoredOps = Sets.newLinkedHashSet();
 
         final Operation[] ops = c.getOperations();
         for (int i = 0; i < ops.length; i++) {
             final int tag = ops[i].getTag();
             for (final File file : c.getFiles(i)) {
                 allOps.get(tag).remove(file);
-                if (allOps.get(tag).isEmpty())
+                if (allOps.get(tag).isEmpty()) {
                     allOps.remove(tag);
+                }
             }
             restoredOps.addAll(c.getReplaced().get(tag).entrySet());
         }
@@ -647,19 +643,16 @@ implements TreeSelectionListener {
      */
     private StatementList buildStatements() {
         // Build a list of Statements equivalent to our operation map
-        final Map<Operation,Set<File>> ops = new HashMap<Operation,Set<File>>();
+        final SetMultimap<Operation,File> ops = LinkedHashMultimap.create();
         for (final Map<File,Operation> tagops : allOps.values()) {
             for (final Map.Entry<File,Operation> e : tagops.entrySet()) {
-                final Operation op = e.getValue();
-                if (!ops.containsKey(op))
-                    ops.put(op, new HashSet<File>());
-                ops.get(op).add(e.getKey());
+                ops.put(e.getValue(), e.getKey());
             }
         }
 
         final StatementList statements = new StatementArrayList();
-        for (final Map.Entry<Operation,Set<File>> e : ops.entrySet()) {
-            statements.add(new Statement(new Constraint(null, e.getValue()), e.getKey()));
+        for (final Operation op : ops.keySet()) {
+            statements.add(new Statement(new Constraint(null, ops.get(op)), op));
         }
         return statements;
     }
