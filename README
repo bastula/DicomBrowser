@@ -4,22 +4,15 @@ To build binary and Java Web Start distributions, do:
 
 mvn assembly:assembly -Dmaven.test.skip
 
-To build a Mac OS X app bundle, do:
-
-mvn package osxappbundle:bundle \
-   -DmainClass=org.nrg.dcm.browse.DicomBrowser \
-   -DdictionaryFile=src/main/app-resources/Info.plist
-/Developer/Tools/SetFile -a aBv target/DicomBrowser-${version}/DicomBrowser.app
-
-(Note that this isn't working: the dictionaryFile option doesn't
-appear to be taking effect)
+To build a MacOS X app bundle, uncomment the osxappbundle plugin
+configuration in the pom.xml.
 
 This package requires a lot of things to be in your Maven 2 repository, notably
 including:
 
 * dcm4che2-core and dcm4che2-net (http://www.dcm4che.org)
 
-* ExtAttr, DicomUtils, DicomEdit, DicomDB (built by "mvn install" in their directories)
+* ExtAttr, DicomUtils, DicomEdit, DicomDB-browser (built by "mvn install" in their directories)
 
 * ui.jar from Apple's MRJ, version 1.5 or later; this is needed for compiling
   but is not included in the fat jar.  The easiest way to get this is to take it
