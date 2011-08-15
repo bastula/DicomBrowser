@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2006-2009 Washington University
+ * Copyright (c) 2006-2011 Washington University
  */
 package org.nrg.dcm.browse;
 
@@ -44,7 +44,9 @@ final class Command {
         this.files = new File[1][];
         this.files[0] = files.toArray(new File[0]);
         this.replaced = Maps.newHashMap();
-        this.replaced.put(op.getTag(), Maps.newHashMap(replaced));
+        for (final int tag : op.getAffectedTags()) {
+            this.replaced.put(tag, Maps.newHashMap(replaced));
+        }
     }
 
     // Multiple operations on the same set of files
