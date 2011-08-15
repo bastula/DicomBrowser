@@ -49,6 +49,7 @@ import org.slf4j.LoggerFactory;
 
 import au.com.bytecode.opencsv.CSVReader;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
@@ -197,7 +198,7 @@ public final class CSVRemapper {
     private final ValueGenerator uidGenerator = new UIDGenerator();
     private final Collection<RemapColumn> remaps;
     private final Map<String,Map<Integer,Integer>> selectionKeysToCols;
-    private final StatementList globalStatements = new StatementArrayList();
+    private final List<Statement> globalStatements = Lists.newArrayList();
     private final PrintStream messages = System.err;
 
     public CSVRemapper(final File configFile)
@@ -317,7 +318,7 @@ public final class CSVRemapper {
      */
     public Map<?,?> apply(final File remapSpreadsheet, final URI out, final Collection<File> files)
     throws IOException,AttributeException,InvalidRemapsException,SQLException {
-        final StatementList statements = new StatementArrayList(globalStatements);
+        final List<Statement> statements = Lists.newArrayList(globalStatements);
 
         if (null != remapSpreadsheet) {
             IOException ioexception = null;
@@ -387,9 +388,9 @@ public final class CSVRemapper {
     public void includeStatements(final InputStream in) throws IOException {
         try {
             final ScriptApplicator applicator = new ScriptApplicator(in,
-                    Collections.emptyMap(),
+                    new HashMap<String,ScriptFunction>(),
                     Collections.singletonMap("UID", uidGenerator));
-            globalStatements.add(applicator.getStatements());
+            globalStatements.addAll(applicator.getStatements());
         } catch (IOException e) {
             throw e;
         } catch (Exception e) {

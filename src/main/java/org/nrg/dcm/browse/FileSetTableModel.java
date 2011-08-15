@@ -42,8 +42,6 @@ import org.nrg.dcm.edit.Deletion;
 import org.nrg.dcm.edit.Operation;
 import org.nrg.dcm.edit.ScriptEvaluationException;
 import org.nrg.dcm.edit.Statement;
-import org.nrg.dcm.edit.StatementArrayList;
-import org.nrg.dcm.edit.StatementList;
 import org.nrg.dcm.io.AdjacentDirFileExporter;
 import org.nrg.dcm.io.AdjacentFileExporter;
 import org.nrg.dcm.io.BatchExporter;
@@ -341,7 +339,7 @@ implements TreeSelectionListener {
             switch (columnIndex) {
             case 0: return contents[rowIndex].getTagString();
             case 1: return contents[rowIndex].getNameString();
-            
+
             case ACTION_COLUMN: {
                 final int tag = contents[rowIndex].getTag();
                 final Set<Operation> ops = Sets.newHashSet();
@@ -361,9 +359,9 @@ implements TreeSelectionListener {
                 final Operation op = ops.iterator().next();
                 return null == op ? OperationFactory.getDefaultName() : op.getName();
             }
-            
+
             case VALUE_COLUMN: return contents[rowIndex];
-            
+
             default: throw new IndexOutOfBoundsException("bad column index");
             }
         }
@@ -418,11 +416,12 @@ implements TreeSelectionListener {
         browser.add(new Command(op, selectedFiles, replacedOps));
 
         // Assign the modified row contents
-        final int tag = op.getTag();
+        //        final int tag = op.getTagSubject();
 
         boolean applied = false;
         for (int row = 0; row < contents.length; row++) {
-            if (tag == contents[row].getTag()) {
+            final int tag = contents[row].getTag();
+            if (op.getAffectedTags().contains(tag)) {
                 if (op instanceof Assignment) {
                     // Our assignments are simple string assignments that don't depend
                     // on other tags, so we can get the new value directly.
@@ -458,23 +457,25 @@ implements TreeSelectionListener {
                 v = null;
             }
             final List<MultiValueAttribute> tcontents = Lists.newArrayList(contents);
-            final MultiValueAttribute value = new MultiValueAttribute(tag, true, v);
-            int newRow = -1;
-            for (final ListIterator<MultiValueAttribute> i = tcontents.listIterator(); i.hasNext();) {
-                final int tt = i.next().getTag();
-                if (tag < tt) {
-                    i.previous();
-                    i.add(value);
-                    newRow = i.previousIndex();
-                    break;
+            for (final int tag : op.getAffectedTags()) {
+                final MultiValueAttribute value = new MultiValueAttribute(tag, true, v);
+                int newRow = -1;
+                for (final ListIterator<MultiValueAttribute> i = tcontents.listIterator(); i.hasNext();) {
+                    final int tt = i.next().getTag();
+                    if (tag < tt) {
+                        i.previous();
+                        i.add(value);
+                        newRow = i.previousIndex();
+                        break;
+                    }
                 }
+                if (newRow < 0) {
+                    tcontents.add(value);
+                    newRow = contents.length;
+                }
+                contents = tcontents.toArray(new MultiValueAttribute[0]);
+                fireTableRowsInserted(newRow,newRow);
             }
-            if (newRow < 0) {
-                tcontents.add(value);
-                newRow = contents.length;
-            }
-            contents = tcontents.toArray(new MultiValueAttribute[0]);
-            fireTableRowsInserted(newRow,newRow);
         }
     }
 
@@ -486,16 +487,17 @@ implements TreeSelectionListener {
      * @return Map of replaced Operations and the File to which they applied.
      */
     private Map<File,Operation> addOperation(final Operation op, final File...files) {
-        final int tag = op.getTag();
         final Map<File,Operation> replaced = new HashMap<File,Operation>();
-        for (final File file : files) {
-            if (!allOps.containsKey(tag)) {
-                allOps.put(tag, new HashMap<File,Operation>());
+        for (final int tag : op.getAffectedTags()) {
+            for (final File file : files) {
+                if (!allOps.containsKey(tag)) {
+                    allOps.put(tag, new HashMap<File,Operation>());
+                }
+                if (allOps.get(tag).containsKey(file)) {
+                    replaced.put(file, allOps.get(tag).get(file));
+                }
+                allOps.get(tag).put(file, op);
             }
-            if (allOps.get(tag).containsKey(file)) {
-                replaced.put(file, allOps.get(tag).get(file));
-            }
-            allOps.get(tag).put(file, op);
         }
         return replaced;
     }
@@ -530,7 +532,7 @@ implements TreeSelectionListener {
      * @param onlySelected if true, script is applied only to selected files; otherwise, to the whole file set
      * @return Command representing this script action
      */
-    public Command doScript(final StatementList statements, final boolean onlySelected, ProgressMonitor pm) {
+    public Command doScript(final Iterable<Statement> statements, final boolean onlySelected, ProgressMonitor pm) {
         final SetMultimap<Operation,File> ops = LinkedHashMultimap.create();
         final Map<Integer,Map<File,Operation>> replaced = new HashMap<Integer,Map<File,Operation>>();
 
@@ -554,9 +556,11 @@ implements TreeSelectionListener {
 
         for (final File file : files) {
             try {
-                for (final Object opo : statements.getOperations(file)) {
+                for (final Object opo : Statement.getOperations(statements, file)) {
                     final Operation op = (Operation)opo;
-                    replaced.put(op.getTag(), addOperation(op, file));
+                    for (final int tag : op.getAffectedTags()) {
+                        replaced.put(tag, addOperation(op, file));
+                    }
                     ops.put(op, file);
                 }
             } catch (IOException e) { // TODO: localize
@@ -619,14 +623,15 @@ implements TreeSelectionListener {
 
         final Operation[] ops = c.getOperations();
         for (int i = 0; i < ops.length; i++) {
-            final int tag = ops[i].getTag();
-            for (final File file : c.getFiles(i)) {
-                allOps.get(tag).remove(file);
-                if (allOps.get(tag).isEmpty()) {
-                    allOps.remove(tag);
+            for (final int tag : ops[i].getAffectedTags()) {
+                for (final File file : c.getFiles(i)) {
+                    allOps.get(tag).remove(file);
+                    if (allOps.get(tag).isEmpty()) {
+                        allOps.remove(tag);
+                    }
                 }
+                restoredOps.addAll(c.getReplaced().get(tag).entrySet());
             }
-            restoredOps.addAll(c.getReplaced().get(tag).entrySet());
         }
 
         for (final Map.Entry<File,Operation> e : restoredOps) {
@@ -641,7 +646,7 @@ implements TreeSelectionListener {
      * Build a list of Statements equivalent to our operation map
      * @return head of Statement list
      */
-    private StatementList buildStatements() {
+    private List<Statement> buildStatements() {
         // Build a list of Statements equivalent to our operation map
         final SetMultimap<Operation,File> ops = LinkedHashMultimap.create();
         for (final Map<File,Operation> tagops : allOps.values()) {
@@ -650,7 +655,7 @@ implements TreeSelectionListener {
             }
         }
 
-        final StatementList statements = new StatementArrayList();
+        final List<Statement> statements = Lists.newArrayList();
         for (final Operation op : ops.keySet()) {
             statements.add(new Statement(new Constraint(null, ops.get(op)), op));
         }

@@ -19,6 +19,8 @@ import javax.swing.text.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
@@ -105,7 +107,12 @@ public final class VariableAssignmentManager {
                 if (null == vi) {
                     return null;
                 } else try {
-                    return text = vi.on(values.asMap());
+                    return vi.on(Maps.transformValues(values.asMap(),
+                            new Function<Collection<String>,String>() {
+                        public String apply(final Collection<String> vals) {
+                            return Joiner.on(',').join(vals);
+                        }
+                    }));
                 } catch (ScriptEvaluationException e) {
                     logger.warn("unable to evaluate initial value for " + v, e);
                     return null;

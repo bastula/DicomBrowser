@@ -11,9 +11,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.ListResourceBundle;
-import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Stack;
 import java.util.prefs.Preferences;
@@ -67,7 +65,6 @@ import org.nrg.dcm.FileSet;
 
 import org.nrg.dcm.edit.ScriptApplicator;
 import org.nrg.dcm.edit.SessionVariablePanel;
-import org.nrg.dcm.edit.Variable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,7 +88,7 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
     private static final String CLEAR_ITEM = "Clear";
     private static final String DELETE_ITEM = "Delete";
     private static final String ADD_ITEM = "Add new attribute...";
-    private static final String APPLY_SCRIPT_ITEM = "Apply anonymization script...";
+    private static final String APPLY_SCRIPT_ITEM = "Apply script...";
     private static final String VIEW_MENU = "View";
     private static final String VIEW_ITEM = "View selected images";
     private static final String CLOSE_FILES_ITEM = "Close selected files";
@@ -100,8 +97,8 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
     private static final String ABOUT_TITLE = "DicomBrowser";
     private static final String SELECT_FILES = "Select DICOM files";
     private static final String CHECKING_FILES = "Checking files...";
-    private static final String OPENING_SCRIPT = "Opening anonymization script...";
-    private static final String SCRIPT_FILTER_DESCRIPTION = "DICOM anonymization script (.das)";
+    private static final String OPENING_SCRIPT = "Opening metadata modification script...";
+    private static final String SCRIPT_FILTER_DESCRIPTION = "DICOM metadata modificaiton script (.das)";
     private static final String BAD_SCRIPT_TITLE = "Error in script";
     private static final String BAD_SCRIPT_MSG_FORMAT = "Error in script: %1$s";
     private static final String ALL_OR_SELECTED_FILES_QUESTION = "Apply script to selected files only or to all files?";
@@ -602,7 +599,6 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
             switch (option) {
             case 0:
             case 1:
-                final Map<?,?> template= null;
                 if (SessionVariablePanel.withAssignedVariables(applicator.getSortedVariables(), tableModel.asMultimap())) {
                     final ProgressMonitor pm = new ProgressMonitor(this,
                             rsrcb.getString(APPLYING_SCRIPT),
