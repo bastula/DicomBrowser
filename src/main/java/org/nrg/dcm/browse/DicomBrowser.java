@@ -98,7 +98,7 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
     private static final String SELECT_FILES = "Select DICOM files";
     private static final String CHECKING_FILES = "Checking files...";
     private static final String OPENING_SCRIPT = "Opening metadata modification script...";
-    private static final String SCRIPT_FILTER_DESCRIPTION = "DICOM metadata modificaiton script (.das)";
+    private static final String SCRIPT_FILTER_DESCRIPTION = "DICOM metadata modification script (.das)";
     private static final String BAD_SCRIPT_TITLE = "Error in script";
     private static final String BAD_SCRIPT_MSG_FORMAT = "Error in script: %1$s";
     private static final String ALL_OR_SELECTED_FILES_QUESTION = "Apply script to selected files only or to all files?";
