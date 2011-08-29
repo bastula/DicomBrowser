@@ -125,7 +125,7 @@ implements TreeSelectionListener {
 
     private StatusBar.TaskMonitor cachingProgress = null;
 
-    private MultiValueAttribute[] contents = new MultiValueAttribute[0];
+    private List<MultiValueAttribute> contents = Lists.newArrayList();
 
     private class CacheBuilder implements Runnable {
         private final boolean wipe;
@@ -175,11 +175,11 @@ implements TreeSelectionListener {
 
     private void updateValues(final SetMultimap<Integer,String> vals, final Collection<Integer> modified) {
         assert vals.keySet().containsAll(modified);
-        final Collection<MultiValueAttribute> newContents = Lists.newArrayList();
+        final List<MultiValueAttribute> newContents = Lists.newArrayList();
         for (final Integer tag : vals.keySet()) {
             newContents.add(new MultiValueAttribute(tag, modified.contains(tag), vals.get(tag).toArray(new String[0])));
         }
-        contents = newContents.toArray(new MultiValueAttribute[0]);
+        contents = newContents;
         fireTableDataChanged();
     }
 
@@ -237,7 +237,7 @@ implements TreeSelectionListener {
                 continue;     // move on to next file
             } catch (SQLException e) {
                 e.printStackTrace();
-                logger.error("error cachine values", e);
+                logger.error("error caching values", e);
                 continue;  // move on to next file
             } catch (OutOfMemoryError e) {
                 JOptionPane.showMessageDialog(browser, rsrcb.getString(OUT_OF_MEMORY_MESSAGE),
@@ -321,7 +321,7 @@ implements TreeSelectionListener {
      * @see javax.swing.table.TableModel#getRowCount()
      */
     public int getRowCount() {
-        return contents.length;
+        return contents.size();
     }
 
     /* (non-Javadoc)
@@ -333,15 +333,20 @@ implements TreeSelectionListener {
         synchronized(contents) {
             // These weird conditions can happen if contents update between
             // the getRowCount() and the getValueAt(); don't sweat it.
-            if (rowIndex >= contents.length || contents[rowIndex] == null)
+            if (rowIndex >= contents.size()) {
                 return null;
+            }
+            final MultiValueAttribute row = contents.get(rowIndex);
+            if (null == row) {
+                return null;
+            }
 
             switch (columnIndex) {
-            case 0: return contents[rowIndex].getTagString();
-            case 1: return contents[rowIndex].getNameString();
+            case 0: return row.getTagString();
+            case 1: return row.getNameString();
 
             case ACTION_COLUMN: {
-                final int tag = contents[rowIndex].getTag();
+                final int tag = row.getTag();
                 final Set<Operation> ops = Sets.newHashSet();
                 synchronized(selectedFiles) {
                     for (final File file : selectedFiles) {
@@ -360,7 +365,7 @@ implements TreeSelectionListener {
                 return null == op ? OperationFactory.getDefaultName() : op.getName();
             }
 
-            case VALUE_COLUMN: return contents[rowIndex];
+            case VALUE_COLUMN: return row;
 
             default: throw new IndexOutOfBoundsException("bad column index");
             }
@@ -376,15 +381,16 @@ implements TreeSelectionListener {
         } else if (o instanceof Operation) {
             doOperation((Operation)o);
         } else if (o instanceof String) {
+            final MultiValueAttribute attr = contents.get(row);
             // If this attribute has a single value over the fileSelection,
             // and it hasn't changed, return without doing anything.
-            if (contents[row].size() == 1 && contents[row].toString().equals(o)) {
+            if (1 == contents.size() && attr.toString().equals(o)) {
                 return;
             }
 
             final String val = (String)o;
             doOperation(OperationFactory.getInstance(OperationFactory.ASSIGN,
-                    contents[row].getTag(), val));
+                    attr.getTag(), val));
 
             // if we're in the middle of building the values table,
             // we'll need to start over.
@@ -393,7 +399,7 @@ implements TreeSelectionListener {
             }
 
         } else if (o instanceof MultiValueAttribute) { // only on canceled edit
-            if (!contents[row].equals(o)) {
+            if (!contents.get(row).equals(o)) {
                 throw new IllegalArgumentException("setValueAt() given unknown attribute: " + o);
             }
         } else {
@@ -419,8 +425,8 @@ implements TreeSelectionListener {
         //        final int tag = op.getTagSubject();
 
         boolean applied = false;
-        for (int row = 0; row < contents.length; row++) {
-            final int tag = contents[row].getTag();
+        for (int row = 0; row < contents.size(); row++) {
+            final int tag = contents.get(row).getTag();
             if (op.getAffectedTags().contains(tag)) {
                 if (op instanceof Assignment) {
                     // Our assignments are simple string assignments that don't depend
@@ -431,10 +437,10 @@ implements TreeSelectionListener {
                     } catch (ScriptEvaluationException e) {
                         value = null;
                     }
-                    contents[row] = new MultiValueAttribute(tag, true, value);
+                    contents.set(row, new MultiValueAttribute(tag, true, value));
                 } else if (op instanceof Deletion) {
                     // Attribute deletion is even simpler.
-                    contents[row] = new MultiValueAttribute(tag, true);
+                    contents.set(row, new MultiValueAttribute(tag, true));
                 } else {
                     // Other operations are more complicated and require values rebuild.
                     // This is a little time-consuming, so we do it in a separate thread.
@@ -471,9 +477,9 @@ implements TreeSelectionListener {
                 }
                 if (newRow < 0) {
                     tcontents.add(value);
-                    newRow = contents.length;
+                    newRow = contents.size();;
                 }
-                contents = tcontents.toArray(new MultiValueAttribute[0]);
+                contents = tcontents;
                 fireTableRowsInserted(newRow,newRow);
             }
         }
@@ -512,7 +518,7 @@ implements TreeSelectionListener {
         final Map<Integer,Map<File,Operation>> replaced = new HashMap<Integer,Map<File,Operation>>();
 
         for (int i = 0; i < rows.length; i++) {
-            final int tag = contents[rows[i]].getTag();       // TODO: may require translation if sorter is applied
+            final int tag = contents.get(rows[i]).getTag();       // TODO: may require translation if sorter is applied
             ops[i] = OperationFactory.getInstance(name, tag);
             if (replaced.containsKey(tag))
                 throw new IllegalArgumentException("multiple operations specified for tag " + TagUtils.toString(tag));

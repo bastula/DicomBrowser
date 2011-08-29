@@ -700,7 +700,7 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
      * This must be executed in the Swing thread
      */
     private static void createAndShowGUI(final FileSet fs) {
-        final JFrame frame = new JFrame("DICOM browser");
+        final JFrame frame = new JFrame("DicomBrowser");
         InterfaceCounter.getInstance().register(frame);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
