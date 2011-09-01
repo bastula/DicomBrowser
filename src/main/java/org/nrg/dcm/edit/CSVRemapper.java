@@ -36,7 +36,6 @@ import org.apache.commons.cli.PosixParser;
 import org.dcm4che2.net.TransferCapability;
 import org.dcm4che2.util.TagUtils;
 import org.dom4j.DocumentException;
-import org.nrg.dcm.edit.DicomUtils.DicomObjectException;
 import org.nrg.dcm.edit.gen.UIDGenerator;
 import org.nrg.dcm.io.BatchExporter;
 import org.nrg.dcm.io.CStoreExporter;
@@ -498,13 +497,9 @@ public final class CSVRemapper {
             for (final Map.Entry<?,?> me : failures.entrySet()) {
                 System.err.print(me.getKey() + ": ");
                 final Object v = me.getValue();
-                if (v instanceof DicomObjectException) {
-                    System.err.println("not DICOM data");
-                } else {
-                    System.err.println(v);
-                    if (verbose && v instanceof Throwable) {
-                        ((Throwable)v).printStackTrace(System.err);
-                    }
+                System.err.println(v);
+                if (verbose && v instanceof Throwable) {
+                    ((Throwable)v).printStackTrace(System.err);
                 }
             }
         }
