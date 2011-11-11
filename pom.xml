@@ -56,7 +56,7 @@
   <groupId>org.nrg</groupId>
   <artifactId>DicomBrowser</artifactId>
   <packaging>jar</packaging>
-  <version>1.5.0b10</version>
+  <version>1.5.0b11</version>
   <name>DicomBrowser</name>
   <description>
 DicomBrowser is a GUI-based utility for viewing and modifying metadata
