@@ -14,6 +14,8 @@ import java.util.LinkedHashSet;
 import java.util.ListResourceBundle;
 import java.util.ResourceBundle;
 import java.util.Stack;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.prefs.Preferences;
 
 import javax.swing.Action;
@@ -162,6 +164,8 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
     public static final String LAST_UID_FRAG_PREF = "list.uid.frag";
     public static final Preferences prefs = Preferences.userNodeForPackage(DicomBrowser.class);
 
+    private static final ExecutorService executor = Executors.newCachedThreadPool();
+
     final class PopupListener extends MouseAdapter {
         private final JPopupMenu popup;
         PopupListener(final JPopupMenu popup) {
@@ -285,9 +289,8 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
         super(new BorderLayout());
         this.frame = frame;
 
-
         treeModel = new FileSetTreeModel(frame, fs);
-        tableModel = new FileSetTableModel(this, fs);
+        tableModel = new FileSetTableModel(this, fs, executor);
 
         tree = new JTree(treeModel);
         tree.setRootVisible(false);
@@ -618,9 +621,9 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
                 }
                 break;
 
-                case 2:
-                default:
-                    return;
+            case 2:
+            default:
+                return;
             }
         }
     }
