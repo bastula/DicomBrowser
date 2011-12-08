@@ -19,9 +19,9 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
 import javax.swing.event.TreeSelectionEvent;
@@ -53,7 +53,9 @@ import org.nrg.util.EditProgressMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
@@ -108,6 +110,7 @@ implements TreeSelectionListener {
     private static final int MAXTAG = Tag.IconImageSequence - 1;
     private static final long CONTENTS_SHOW_INTERVAL = 1000;
     private static final long CONTENTS_UPDATE_INTERVAL = 4000;       // ms, heuristic
+    private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
     private static final int nCols = 4;
     public static final int ACTION_COLUMN = 2;
@@ -116,7 +119,7 @@ implements TreeSelectionListener {
     static final int MAX_VALUES_SHOWN = 4;
     static final String MORE_VALUES = "...";
 
-    private final Executor executor = Executors.newCachedThreadPool();
+    private final ExecutorService executor;
     private final FileSet fs;
     private final Set<TreePath> fileSelection = Sets.newLinkedHashSet();
     private final Set<File> selectedFiles = Sets.newLinkedHashSet();
@@ -140,10 +143,10 @@ implements TreeSelectionListener {
     };
 
 
-    public FileSetTableModel(final DicomBrowser browser, final FileSet fs) {
-        super();
+    public FileSetTableModel(final DicomBrowser browser, final FileSet fs, final ExecutorService exs) {
         this.fs = fs;
         this.browser = browser;
+        this.executor = exs;
     }
 
     public final SetMultimap<Integer,String> asMultimap() {
@@ -193,8 +196,9 @@ implements TreeSelectionListener {
      *                            where an immediate wipe seemed appropriate.
      */
     private void cacheValues(boolean wipeTableFirst) {
-        if (cachingProgress != null)
+        if (cachingProgress != null) {
             cachingProgress.cancel();
+        }
 
         final List<File> localSelectedFiles;
         synchronized(selectedFiles) {
@@ -668,7 +672,46 @@ implements TreeSelectionListener {
         return statements;
     }
 
-
+    private static final class ExportFailureHandler implements Runnable {
+        private final JFrame frame;
+        private final BatchExporter exporter;
+        
+        ExportFailureHandler(final BatchExporter exporter, final JFrame frame) {
+            this.exporter = exporter;
+            this.frame = frame;
+        }
+        
+        public void run() {
+            exporter.run();
+            final Map<?,Throwable> failures = exporter.getFailures();
+            if (!failures.isEmpty()) {  // TODO: localize
+                final StringBuilder message = new StringBuilder("Error: ");
+                message.append(failures.size());
+                message.append(" object");
+                if (failures.size() > 1) {
+                    message.append("s");
+                }
+                message.append(" could not be exported").append(LINE_SEPARATOR);
+                final ListMultimap<Class<?>, Throwable> throwables = ArrayListMultimap.create();
+                for (final Throwable t : failures.values()) {
+                    throwables.put(t.getClass(), t);
+                }
+                final boolean multipleCauses = throwables.keySet().size() > 1;
+                for (final Class<?> clazz : throwables.keySet()) {
+                    if (multipleCauses) {
+                        message.append(throwables.get(clazz).size());
+                        message.append(" objects(s): ");
+                    }
+                    message.append(clazz.getSimpleName()).append(": ");
+                    message.append(throwables.get(clazz).get(0).getMessage());
+                }
+                JOptionPane.showMessageDialog(frame, message,
+                        "Export failed",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        }        
+    }
+    
     /**
      * Send the modified files (all or only the selected files) to a
      * DICOM receiver.
@@ -706,7 +749,7 @@ implements TreeSelectionListener {
 
             final BatchExporter batch = new BatchExporter(exporter, buildStatements(), files);
             batch.setProgressMonitor(pm, 0);
-            executor.execute(batch);
+            executor.execute(new ExportFailureHandler(batch, browser.getFrame()));
         } catch (SQLException e) {
             logger.error("unable to get data files", e);
             JOptionPane.showMessageDialog(browser.getFrame(),      // TODO: localize
@@ -734,11 +777,9 @@ implements TreeSelectionListener {
         final EditProgressMonitor pm = SwingProgressMonitor.getMonitor(browser.getFrame(),
                 rsrcb.getString(WRITING_FILES), "", 0, files.size());
 
-        final BatchExporter batch =
-            new BatchExporter(exporter, buildStatements(), files);
+        final BatchExporter batch = new BatchExporter(exporter, buildStatements(), files);
         batch.setProgressMonitor(pm, 0);
-        executor.execute(batch);
-        // TODO: set a check for errors
+        executor.execute(new ExportFailureHandler(batch, browser.getFrame()));
     }
 
     void saveInAdjacentDir(final String format, final boolean allFiles) {
@@ -748,7 +789,6 @@ implements TreeSelectionListener {
     void saveInAdjacentFile(final String suffix, final boolean allFiles) {
         export(new AdjacentFileExporter(AE_TITLE, suffix), allFiles);
     }
-
 
     void saveInNewRoot(final String rootpath, final boolean allFiles) {
         final DicomObjectExporter exporter;
@@ -764,7 +804,6 @@ implements TreeSelectionListener {
         }
         export(exporter, allFiles);
     }
-
 
     void overwrite(final boolean allFiles) {
         export(new OverwriteFileExporter(AE_TITLE), allFiles);
