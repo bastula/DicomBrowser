@@ -59,7 +59,7 @@ final class AboutDialog extends JDialog {
     version.setAlignmentX(Component.CENTER_ALIGNMENT);
     add(version);
     
-    final JLabel wucopy = new JLabel("Copyright \u00A9 2006-2011 Washington University");
+    final JLabel wucopy = new JLabel("Copyright \u00A9 2006-2012 Washington University");
     wucopy.setBorder(margin);
     wucopy.setAlignmentX(Component.CENTER_ALIGNMENT);
     add(wucopy);
@@ -69,7 +69,7 @@ final class AboutDialog extends JDialog {
     devel.setAlignmentX(Component.CENTER_ALIGNMENT);
     add(devel);
     
-    final JLabel email = new JLabel("Questions, comments, or bugs?  Mail nrg-tech@nrg.wustl.edu");
+    final JLabel email = new JLabel("Questions, comments, or bugs?  Mail dicombrowser@nrg.wustl.edu");
     email.setBorder(margin);
     email.setAlignmentX(Component.CENTER_ALIGNMENT);
     add(email);
