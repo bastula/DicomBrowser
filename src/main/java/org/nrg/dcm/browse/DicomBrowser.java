@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2006-2011 Washington University
+ * Copyright (c) 2006-2012 Washington University
  */
 package org.nrg.dcm.browse;
 
@@ -418,8 +418,10 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
             openFiles(null);
         } else if (command.equals(getString(SEND_ITEM))) {
             cellEditor.stopCellEditing();
+            logger.trace("creating CStoreDialog");
             final JDialog sendDialog = new CStoreDialog(this, tableModel);
             sendDialog.setVisible(true);
+            logger.trace("CStoreDialog {} created and made visible", sendDialog);
         } else if (command.equals(getString(SAVE_ITEM))) {
             cellEditor.stopCellEditing();
             final JDialog saveDialog = new SaveDialog(this, tableModel);
