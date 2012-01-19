@@ -24,9 +24,9 @@
       </plugin>
      <!-- Uncomment this plugin to build a MacOS X app bundle -->
       <plugin>
-	<groupId>org.codehaus.mojo</groupId>
+	<groupId>net.frontlinesms.build</groupId>
 	<artifactId>osxappbundle-maven-plugin</artifactId>
-	<version>1.0-alpha-2</version>
+	<version>1.0</version>
 	<configuration>
 	  <mainClass>org.nrg.dcm.browse.DicomBrowser</mainClass>
 	  <dictionaryFile>${basedir}/src/main/app-resources/Info.plist</dictionaryFile>
@@ -57,7 +57,7 @@
   <groupId>org.nrg</groupId>
   <artifactId>DicomBrowser</artifactId>
   <packaging>jar</packaging>
-  <version>1.5.0</version>
+  <version>1.5.1-SNAPSHOT</version>
   <name>DicomBrowser</name>
   <description>
 DicomBrowser is a GUI-based utility for viewing and modifying metadata
