@@ -73,7 +73,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Kevin A. Archie <karchie@wustl.edu>
  */
-public final class DicomBrowser extends JPanel
+public class DicomBrowser extends JPanel
 implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionListener {
     private static final long serialVersionUID = 1; 
 
@@ -162,7 +162,7 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
     public static final String MAX_LEN_PREF = "value.maxlen";
     public static final String UID_ROOT_PREF = "uid.root";
     public static final String LAST_UID_FRAG_PREF = "list.uid.frag";
-    public static final Preferences prefs = Preferences.userNodeForPackage(DicomBrowser.class);
+    private static final Preferences prefs = Preferences.userNodeForPackage(DicomBrowser.class);
 
     private static final ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -256,6 +256,7 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
 
     private final Stack<Command> undoable = new Stack<Command>();
     private final Stack<Command> redoable = new Stack<Command>();
+
 
     /**
      * Returns the localized version of the indicated label
@@ -387,7 +388,14 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
         statusBar = new StatusBar();
         add(statusBar, BorderLayout.SOUTH);
     }
-
+ 
+    /**
+     * Returns the Preferences for this application
+     * @return Preferences object
+     */
+    public Preferences getPrefs() {
+        return prefs;
+    }
 
     public void componentHidden(final ComponentEvent e) {}
     public void componentMoved(final ComponentEvent e) {}
