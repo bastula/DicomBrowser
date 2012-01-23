@@ -3,10 +3,9 @@
  */
 package org.nrg.dcm.browse;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.Stack;
+import java.util.Vector;
+import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,12 +16,16 @@ import javax.swing.JLabel;
 import java.awt.GridBagConstraints;
 
 import javax.swing.JCheckBox;
+import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.JComboBox;
 import javax.swing.JButton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
 
 import java.awt.Insets;
 
@@ -47,7 +50,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
     private static final String AE_HISTORY = "AE-history";  //  @jve:decl-index=0:
 
     private static final int ALL_FILES_INDEX = 0;
-    
+
     private final Logger logger = LoggerFactory.getLogger(CStoreDialog.class);
 
     private JPanel jContentPane = null;
@@ -82,6 +85,9 @@ final class CStoreDialog extends JDialog implements ActionListener {
 
 
     private static final class AEAddr {
+        private static final Pattern OLD_ADDR_PATTERN = Pattern.compile("([^\\:]+)\\:([^\\:]+)\\:([^\\:]+)");
+        private static final Pattern ADDR_PATTERN = Pattern.compile("([^#]+)#([^\\:]+)\\:([^\\:]+)\\:([^\\:]+)");
+
         private final String host;
         private final int port;
         private final String remoteAE;
@@ -94,9 +100,6 @@ final class CStoreDialog extends JDialog implements ActionListener {
             this.remoteAE = remoteAE;
             this.localAE = localAE;
         }
-
-        private final Pattern OLD_ADDR_PATTERN = Pattern.compile("([^\\:]+)\\:([^\\:]+)\\:([^\\:]+)");
-        private final Pattern ADDR_PATTERN = Pattern.compile("([^#]+)#([^\\:]+)\\:([^\\:]+)\\:([^\\:]+)");
 
         public AEAddr(final String desc) {
             final Matcher matcher = ADDR_PATTERN.matcher(desc);
@@ -113,7 +116,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
                     this.remoteAE = oldMatcher.group(3);
                     this.localAE = DEFAULT_AE_TITLE;
                 } else {
-                    throw new RuntimeException("Uninterpretable AE address entry " + desc);
+                    throw new IllegalArgumentException("Uninterpretable AE address entry " + desc);
                 }
             }
         }
@@ -132,7 +135,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
 
         @Override
         public int hashCode() {
-            return toString().hashCode();
+            return Objects.hashCode(localAE, host, port, remoteAE);
         }
 
         @Override
@@ -147,10 +150,16 @@ final class CStoreDialog extends JDialog implements ActionListener {
 
         AEHistory(final String hs) {
             super();
-            if (hs != null) {
+            if (null != hs) {
                 final String[] h = hs.split(SEPARATOR);
-                for (int i = h.length - 1; i >= 0; i--)
-                    push(new AEAddr(h[i]));
+                for (int i = h.length - 1; i >= 0; i--) {
+                    try {
+                        push(new AEAddr(h[i]));
+                    } catch (IllegalArgumentException e) {
+                        LoggerFactory.getLogger(AEHistory.class)
+                        .warn("invalid AE history entry {}, skipping", h[i]);
+                    }
+                }
             }
         }
 
@@ -163,38 +172,37 @@ final class CStoreDialog extends JDialog implements ActionListener {
             return null;
         }
 
-        String[] getHosts() {
-            final Collection<String> hosts = new LinkedHashSet<String>();
-            for (final AEAddr a : this) {
-                hosts.add(a.host);
+        Vector<String> getHosts() {
+            final Vector<String> hosts = new Vector<String>(size());
+            for (final AEAddr ae : this) {
+                hosts.add(ae.host);
             }
-            return hosts.toArray(new String[0]);
+            return hosts;
         }
 
-        String[] getPorts() {
-            final Collection<String> ports = new LinkedHashSet<String>();
-            for (final AEAddr a : this) {
-                ports.add(String.valueOf(a.port));
+        Vector<String> getPorts() {
+            final Vector<String> ports = new Vector<String>(size());
+            for (final AEAddr ae : this) {
+                ports.add(String.valueOf(ae.port));
             }
-            return ports.toArray(new String[0]);
+            return ports;
         }
 
-        String[] getRemoteTitles() {
-            final Collection<String> aets = new LinkedHashSet<String>();
-            for (final AEAddr a : this) {
-                aets.add(a.remoteAE);
+        Vector<String> getRemoteTitles() {
+            final Vector<String> aets = new Vector<String>(size());
+            for (final AEAddr ae : this) {
+                aets.add(ae.remoteAE);
             }
-            return aets.toArray(new String[0]);
+            return aets;
         }
 
-        String[] getLocalTitles() {
-            final Collection<String> aets = new LinkedHashSet<String>();
+        Vector<String> getLocalTitles() {
+            final Vector<String> aets = new Vector<String>(size());
             for (final AEAddr a : this) {
                 aets.add(a.localAE);
             }
-            return aets.toArray(new String[0]);
+            return aets;
         }
-
 
         @Override
         public AEAddr push(final AEAddr item) {
@@ -206,24 +214,20 @@ final class CStoreDialog extends JDialog implements ActionListener {
 
         @Override
         public String toString() {
-            final Iterator<AEAddr> ai = iterator();
-            final StringBuilder sb = new StringBuilder(ai.hasNext() ? ai.next().toString() : null);
-            while (ai.hasNext()) {
-                sb.append(SEPARATOR);
-                sb.append(ai.next().toString());
-            }
-            return sb.toString();
-        }
+            return Joiner.on(SEPARATOR).join(this);
+         }
     }
 
+    private final Preferences prefs;
     private final AEHistory history;
 
     public CStoreDialog(final DicomBrowser browser, final FileSetTableModel model) {
         super(browser.getFrame());
         this.model = model;
+        this.prefs = browser.getPrefs();
 
         logger.trace("loading SCP AE history from preferences");
-        history = new AEHistory(DicomBrowser.prefs.get(AE_HISTORY, null));
+        history = new AEHistory(prefs.get(AE_HISTORY, null));
         logger.trace("setting location");
         setLocationRelativeTo(browser);
         logger.trace("initializing");
@@ -377,11 +381,6 @@ final class CStoreDialog extends JDialog implements ActionListener {
         return jContentPane;
     }
 
-    /**
-     * This method initializes whichFiles	
-     * 	
-     * @return javax.swing.JComboBox	
-     */
     private JComboBox getWhichFiles() {
         if (whichFiles == null) {
             whichFiles = new JComboBox(whichOpts);    // this comes out too small on Windows
@@ -390,12 +389,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
         return whichFiles;
     }
 
-    /**
-     * This method initializes sendButton	
-     * 	
-     * @return javax.swing.JButton	
-     */
-    private JButton getSendButton() {
+     private JButton getSendButton() {
         if (sendButton == null) {
             sendButton = new JButton(SEND_BUTTON);
             sendButton.addActionListener(this);
@@ -403,11 +397,6 @@ final class CStoreDialog extends JDialog implements ActionListener {
         return sendButton;
     }
 
-    /**
-     * This method initializes cancelButton	
-     * 	
-     * @return javax.swing.JButton	
-     */
     private JButton getCancelButton() {
         if (cancelButton == null) {
             cancelButton = new JButton(CANCEL_BUTTON);
@@ -416,12 +405,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
         return cancelButton;
     }
 
-    /**
-     * This method initializes hostComboBox	
-     * 	
-     * @return javax.swing.JComboBox	
-     */
-    private JComboBox getHostComboBox() {
+     private JComboBox getHostComboBox() {
         if (hostComboBox == null) {
             hostComboBox = new JComboBox(history.getHosts());
             hostComboBox.setEditable(true);
@@ -431,12 +415,6 @@ final class CStoreDialog extends JDialog implements ActionListener {
         return hostComboBox;
     }
 
-
-    /**
-     * This method initializes aeComboBox	
-     * 	
-     * @return javax.swing.JComboBox	
-     */
     private JComboBox getRemoteAEComboBox() {
         if (remoteAEComboBox == null) {
             remoteAEComboBox = new JComboBox(history.getRemoteTitles());
@@ -455,7 +433,6 @@ final class CStoreDialog extends JDialog implements ActionListener {
         return localAEComboBox;
     }
 
-
     public void actionPerformed(ActionEvent e) {
         final Object source = e.getSource();
         if (source == hostComboBox) {
@@ -468,17 +445,26 @@ final class CStoreDialog extends JDialog implements ActionListener {
         } else {
             final String command = e.getActionCommand();
             if (command.equals(SEND_BUTTON)) {
-                setVisible(false);
-                history.push(new AEAddr((String)hostComboBox.getSelectedItem(),
-                        Integer.parseInt((String)portComboBox.getSelectedItem()),
-                        (String)remoteAEComboBox.getSelectedItem(),
-                        (String)localAEComboBox.getSelectedItem()));
-                DicomBrowser.prefs.put(AE_HISTORY, history.toString());
-                doSend();
+                final int port;
+                try {
+                    port = Integer.parseInt((String)portComboBox.getSelectedItem());
+                    history.push(new AEAddr((String)hostComboBox.getSelectedItem(),
+                            port,
+                            (String)remoteAEComboBox.getSelectedItem(),
+                            (String)localAEComboBox.getSelectedItem()));
+                    prefs.put(AE_HISTORY, history.toString());
+                    setVisible(false);
+                    doSend();
+                } catch (NumberFormatException e1) {
+                    JOptionPane.showMessageDialog(this,
+                            String.format("Invalid port number: %s", portComboBox.getSelectedItem()),
+                            "Invalid port",
+                            JOptionPane.ERROR_MESSAGE);
+                }
             } else if (command.equals(CANCEL_BUTTON)) {
                 setVisible(false);        // never mind
             } else {
-                throw new RuntimeException("Unimplemented action: " + command);
+                throw new UnsupportedOperationException("Unimplemented action: " + command);
             }
         }
     }
@@ -492,14 +478,9 @@ final class CStoreDialog extends JDialog implements ActionListener {
                 useTLSCheckBox.isSelected(),
                 (String)localAEComboBox.getSelectedItem(),
                 whichFiles.getSelectedIndex() == ALL_FILES_INDEX);
-        wc.unregister(this);
+        wc.unregister(this, true);
     }
 
-    /**
-     * This method initializes portComboBox	
-     * 	
-     * @return javax.swing.JComboBox	
-     */
     private JComboBox getPortComboBox() {
         if (portComboBox == null) {
             portComboBox = new JComboBox(history.getPorts());
@@ -515,5 +496,4 @@ final class CStoreDialog extends JDialog implements ActionListener {
         }
         return useTLSCheckBox;
     }
-
-}  //  @jve:decl-index=0:visual-constraint="10,10"
+}
