@@ -1,13 +1,15 @@
 /**
- * Copyright (c) 2008-2011 Washington University
+ * Copyright (c) 2008-2012 Washington University
  */
 package org.nrg.dcm.edit;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -30,7 +32,6 @@ import org.apache.commons.cli.PosixParser;
 import org.dcm4che2.net.TransferCapability;
 import org.dcm4che2.util.TagUtils;
 import org.dom4j.DocumentException;
-import org.nrg.dcm.edit.gen.UIDGenerator;
 import org.nrg.dcm.io.BatchExporter;
 import org.nrg.dcm.io.CStoreExporter;
 import org.nrg.dcm.io.DicomObjectExporter;
@@ -188,7 +189,6 @@ public final class CSVRemapper {
         }
     }
 
-    private final ValueGenerator uidGenerator = new UIDGenerator();
     private final Collection<RemapColumn> remaps;
     private final Map<String,Map<Integer,Integer>> selectionKeysToCols;
     private final List<Statement> globalStatements = Lists.newArrayList();
@@ -369,17 +369,37 @@ public final class CSVRemapper {
         return batch.getFailures();
     }
 
-    public void includeStatements(final File dasFile) throws IOException {
+    public void includeStatements(final File dasFile)
+    throws IOException {
         final InputStream in = new FileInputStream(dasFile);
         includeStatements(in);
         try { in.close(); } catch (IOException ignore) {}
     }
 
-    public void includeStatements(final InputStream in) throws IOException {
+    public void includeStatements(final InputStream in)
+    throws IOException {
+        final Map<Integer,String> m = Collections.emptyMap();
         try {
-            final ScriptApplicator applicator = new ScriptApplicator(in,
-                    Collections.<String,ScriptFunction>emptyMap(),
-                    Collections.singletonMap("UID", uidGenerator));
+            final ScriptApplicator applicator = new ScriptApplicator(in);
+            final BufferedReader tty = new BufferedReader(new InputStreamReader(System.in));
+            for (final Variable v : applicator.getSortedVariables()) {
+                final Value iv = v.getInitialValue();
+                final String ivs = null == iv ? null : iv.on(m);
+                System.out.print("Enter value for " + v.getDescription());
+                if (!Strings.isNullOrEmpty(ivs)) {
+                    System.out.print(" [" + iv + "]");
+                }
+                System.out.print(": ");
+                System.out.flush();
+                final String val = tty.readLine();
+                if (Strings.isNullOrEmpty(val)) {
+                    if (!Strings.isNullOrEmpty(ivs)) {
+                        v.setValue(ivs);
+                    }
+                } else {
+                    v.setValue(val);
+                }
+            }
             globalStatements.addAll(applicator.getStatements());
         } catch (IOException e) {
             throw e;
