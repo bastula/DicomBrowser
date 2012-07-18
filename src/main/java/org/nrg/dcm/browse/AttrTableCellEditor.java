@@ -39,7 +39,7 @@ public final class AttrTableCellEditor extends AbstractCellEditor
   public Component getTableCellEditorComponent(final JTable table,
       final Object value, final boolean isSelected,
       final int row, final int column) {
-    assert value instanceof MultiValueAttribute;
+    assert value instanceof MultiValueAttribute && ((MultiValueAttribute)value).isModifiable();
     assert table.equals(this.table);
     this.row = row;
     this.column = column;

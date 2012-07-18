@@ -59,7 +59,7 @@
   <groupId>org.nrg</groupId>
   <artifactId>DicomBrowser</artifactId>
   <packaging>jar</packaging>
-  <version>1.6.0</version>
+  <version>1.7.0b1</version>
   <name>DicomBrowser</name>
   <description>
 DicomBrowser is a GUI-based utility for viewing and modifying metadata
@@ -142,7 +142,7 @@ hundreds or thousands of image files rather than on individual images.
     <dependency>
       <groupId>org.nrg</groupId>
       <artifactId>DicomEdit</artifactId>
-      <version>2.2.1</version>
+      <version>2.3.0</version>
     </dependency>
     <dependency>
       <!-- Apple library for Mac-specific GUI -->
@@ -167,7 +167,7 @@ hundreds or thousands of image files rather than on individual images.
     <dependency>
       <groupId>org.nrg</groupId>
       <artifactId>DicomDB-browser</artifactId>
-      <version>0.1.0</version>
+      <version>1.7.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.nrg</groupId>
@@ -177,7 +177,7 @@ hundreds or thousands of image files rather than on individual images.
     <dependency>
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
-      <version>20080701</version>
+      <version>20090211</version>
     </dependency>
      <dependency>
       <groupId>commons-cli</groupId>
@@ -187,7 +187,7 @@ hundreds or thousands of image files rather than on individual images.
      <dependency>
      	<groupId>net.sf.opencsv</groupId>
      	<artifactId>opencsv</artifactId>
-     	<version>2.0</version>
+     	<version>2.3</version>
      </dependency>
   </dependencies>
 </project>

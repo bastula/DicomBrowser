@@ -272,7 +272,7 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
     // this covers most field types
     static private final int defaultMaxValueLen = 64;
 
-    static private final int[] columnWidths = { 80, 160, 80, 380 };
+    static private final int[] columnWidths = { 120, 160, 80, 380 };
 
     private final JFrame frame;
     private final JSplitPane splitPane;
@@ -310,8 +310,7 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
         needsAttrSelection.add(keepAction);
 
         clearAction = new CommandAction(rsrcb.getString(CLEAR_ITEM), KeyEvent.VK_C);
-        clearAction.setEnabled(false);
-        needsAttrSelection.add(clearAction);
+        clearAction.setEnabled(false);  // has custom selection management
 
         deleteAction = new CommandAction(rsrcb.getString(DELETE_ITEM), KeyEvent.VK_D);
         deleteAction.setEnabled(false);
@@ -343,14 +342,7 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
         final MouseListener treePopupListener = new PopupListener(treePopup);
         tree.addMouseListener(treePopupListener);
 
-        table = new JTable(tableModel) {
-            private static final long serialVersionUID = 1;
-            @Override
-            public boolean isCellEditable(int row, int col) {
-                return col == FileSetTableModel.VALUE_COLUMN;      // only operationFactory is editable
-            }
-        };
-
+        table = new JTable(tableModel);
         table.getSelectionModel().addListSelectionListener(this);   // for menu enable/disable
 
 
@@ -510,8 +502,10 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
     public void valueChanged(ListSelectionEvent e) {
         final ListSelectionModel lsm = (ListSelectionModel)e.getSource();
         final boolean notEmpty = !lsm.isSelectionEmpty();
-        for (final Action action : needsAttrSelection)
+        for (final Action action : needsAttrSelection) {
             action.setEnabled(notEmpty);
+        }
+        clearAction.setEnabled(tableModel.allowClear(lsm));
     }
 
 
@@ -543,7 +537,6 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
                     sendItem.setEnabled(true);
-                    saveItem.setEnabled(true);
                 }
             });
         }
@@ -750,22 +743,22 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
         browser.sendItem.setMnemonic(KeyEvent.VK_E);
         browser.sendItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
         browser.sendItem.addActionListener(browser);
+        browser.sendItem.setEnabled(true);
         fileMenu.add(browser.sendItem);
 
         browser.saveItem = new JMenuItem(rsrcb.getString(SAVE_ITEM));
         browser.saveItem.setMnemonic(KeyEvent.VK_S);
         browser.saveItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
         browser.saveItem.addActionListener(browser);
+        browser.saveItem.setEnabled(true);
         fileMenu.add(browser.saveItem);
 
         try {
-            if (0 == fs.size()) {
+            if (fs.isEmpty()) {
                 browser.sendItem.setEnabled(false);
-                browser.saveItem.setEnabled(false);
             }
         } catch (SQLException e) {
             browser.sendItem.setEnabled(false);
-            browser.saveItem.setEnabled(false);
         }
 
         fileMenu.addSeparator();

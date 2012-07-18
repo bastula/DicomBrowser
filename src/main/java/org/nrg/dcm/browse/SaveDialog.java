@@ -18,6 +18,8 @@ import javax.swing.JTextField;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 
+import org.nrg.dcm.io.MultifileExporter;
+
 
 
 /**
@@ -39,10 +41,17 @@ final class SaveDialog extends JDialog implements ActionListener {
 
     private static final String[] whereOpts = { ADJACENT_DIR_OPT, ADJACENT_FILE_OPT, NEW_ROOT_OPT, OVERWRITE_OPT };
 
-    private static final String WRITE_ALL_FILES = "Write all loaded files";
     private static final String WRITE_SELECTED_FILES = "Write only selected files";
+    private static final String WRITE_ALL_FILES = "Write all loaded files";
+    private static final String WRITE_FILES_FROM_FILESYSTEM = "Copy files from disk";
 
-    private static final String[] whichOpts = { WRITE_ALL_FILES, WRITE_SELECTED_FILES };    // TODO: localize
+    private static final String SELECT_OUTPUT_ROOT = "Select output directory";
+    private static final String SELECT = "Select";
+
+    private static final String[] whichOpts = { WRITE_SELECTED_FILES, WRITE_ALL_FILES, WRITE_FILES_FROM_FILESYSTEM };    // TODO: localize
+    // private static final int WHICH_SELECTED_FILES = 0;
+    private static final int WHICH_ALL_FILES = 1;
+    private static final int WHICH_FROM_FILESYSTEM = 2;
 
     private static final int OUTER_INSET = 12;
     private static final int INNER_INSET = 6;
@@ -97,7 +106,17 @@ final class SaveDialog extends JDialog implements ActionListener {
         gbc.fill = GridBagConstraints.NONE;
 
         // lower row
-        whichComboBox = new JComboBox(whichOpts);
+        int size;
+        try {
+            size = model.size();
+        } catch (Throwable t) {
+            size = 0;
+        }
+        if (size > 0) {
+            whichComboBox = new JComboBox(whichOpts);
+        } else {
+            whichComboBox = new JComboBox(new String[]{WRITE_FILES_FROM_FILESYSTEM});
+        }
         gbc.gridx = 1; gbc.gridy = 3;
         gbc.gridwidth = 1;
         gbc.insets = new Insets(INNER_INSET,OUTER_INSET,OUTER_INSET,INNER_INSET);
@@ -131,9 +150,9 @@ final class SaveDialog extends JDialog implements ActionListener {
 
 
     private boolean setRootPath() {
-        final JFileChooser chooser = new JFileChooser(prefs.get(DicomBrowser.OPEN_DIR_PREF, null));
-        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        final int r = chooser.showOpenDialog(this);
+        final JFileChooser chooser = new OutputFolderChooser(prefs.get(DicomBrowser.OPEN_DIR_PREF, SELECT));
+        chooser.setDialogTitle(SELECT_OUTPUT_ROOT);
+        final int r = chooser.showDialog(this, SELECT);
         if (r == JFileChooser.APPROVE_OPTION) {
             final File f = chooser.getSelectedFile();
             argTextField.setText(f.getPath());
@@ -182,36 +201,56 @@ final class SaveDialog extends JDialog implements ActionListener {
                 break;
 
             default:
-                throw new RuntimeException("Unimplemented operation: " + whereComboBox.getSelectedItem());
+                throw new UnsupportedOperationException("Unimplemented operation: " + whereComboBox.getSelectedItem());
             }
         } else {
             final String command = e.getActionCommand();
             if (SAVE_BUTTON.equals(command)) {
                 setVisible(false);
 
-                final boolean allFiles = 0 == whichComboBox.getSelectedIndex();
+                final boolean allFiles;
+                final MultifileExporter exporter;
+                final int whichi = whichComboBox.getSelectedIndex();
+                if (whichi == WHICH_FROM_FILESYSTEM ||
+                        whichComboBox.getItemCount() == 1) {
+                    allFiles = true;
+                    final JFileChooser chooser = new JFileChooser(prefs.get(DicomBrowser.OPEN_DIR_PREF, null));
+                    chooser.setDialogTitle("Select source directory");
+                    chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                    final int r = chooser.showOpenDialog(this);
+                    if (r == JFileChooser.APPROVE_OPTION) {
+                        exporter = new FileTreeExporter(this.getParent(), prefs, model.executor, chooser.getSelectedFile());
+                    } else {
+                        // allow the user to return to the save dialog.
+                        setVisible(true);
+                        return;
+                    }                                        
+                } else {
+                    exporter = model;
+                    allFiles = whichi == WHICH_ALL_FILES;
+                }
+
                 final String arg = argTextField.getText();
                 switch (whereComboBox.getSelectedIndex()) {
                 case 0:         // adjacent directory
-                    model.saveInAdjacentDir("%s" + arg, allFiles);
+                    exporter.saveInAdjacentDir("%s" + arg, allFiles);
                     break;
 
                 case 1:         // adjacent file
-                    model.saveInAdjacentFile("%s" + arg, allFiles);
+                    exporter.saveInAdjacentFile("%s" + arg, allFiles);
                     break;
 
                 case 2:         // new root
-                    model.saveInNewRoot(arg, allFiles);
+                    exporter.saveInNewRoot(arg, allFiles);
                     break;
 
                 case 3:         // overwrite
-                    model.overwrite(allFiles);
+                    exporter.overwrite(allFiles);
                     break;
 
                 default:
                     throw new UnsupportedOperationException("Unimplemented operation: " + whereComboBox.getSelectedItem());
                 }
-
             } else if (command.equals(CANCEL_BUTTON)) {
                 setVisible(false);        // never mind
             } else if (command.equals(BROWSE_BUTTON)) {
