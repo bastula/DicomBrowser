@@ -3,10 +3,9 @@
  */
 package org.nrg.dcm.browse;
 
-import org.nrg.dcm.edit.Operation;
-import org.nrg.dcm.edit.NoOp;
 import org.nrg.dcm.edit.Assignment;
 import org.nrg.dcm.edit.Deletion;
+import org.nrg.dcm.edit.Operation;
 
 /**
  * @author Kevin A. Archie <karchie@wustl.edu>
@@ -37,9 +36,8 @@ final class OperationFactory {
 
     static final Operation getInstance(final String name, final int tag, final String value) {
         if (KEEP.equals(name)) {
-            assert value == null;
-            return new NoOp() { @Override public String getName() { return KEEP; }} ;
-        } else if (ASSIGN.equals(name)) {
+            return new Keep(tag);
+       } else if (ASSIGN.equals(name)) {
             return new Assignment(tag, value) { @Override public String getName() { return ASSIGN; }};
         } else if (CLEAR.equals(name)) {
             assert value == null;

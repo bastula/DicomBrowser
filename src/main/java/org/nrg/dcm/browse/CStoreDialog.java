@@ -3,35 +3,32 @@
  */
 package org.nrg.dcm.browse;
 
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Stack;
 import java.util.Vector;
 import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.swing.JPanel;
-import javax.swing.JDialog;
-import java.awt.GridBagLayout;
-import javax.swing.JLabel;
-import java.awt.GridBagConstraints;
-
-import javax.swing.JCheckBox;
-import javax.swing.JOptionPane;
-import javax.swing.SwingConstants;
-import javax.swing.JComboBox;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
-
-import java.awt.Insets;
-
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.Dimension;
 
 
 /**
@@ -44,12 +41,12 @@ final class CStoreDialog extends JDialog implements ActionListener {
     private static final String TITLE = "Send files to DICOM receiver";  // TODO: localize
     private static final String SEND_BUTTON = "Send";            // TODO: localize
     private static final String CANCEL_BUTTON = "Cancel";        // TODO: localize
-    private static final String[] whichOpts = {"Send all files", "Send only selected files"};     // TODO: localize
+    
+    private static final String[] whichOpts = {"Send only selected files", "Send all files"};     // TODO: localize
+    private static final int ALL_FILES_INDEX = 1;
 
-    private static final String DEFAULT_AE_TITLE = "NRG-C-STORE-SCU";
+    private static final String DEFAULT_AE_TITLE = "DicomBrowser";
     private static final String AE_HISTORY = "AE-history";  //  @jve:decl-index=0:
-
-    private static final int ALL_FILES_INDEX = 0;
 
     private final Logger logger = LoggerFactory.getLogger(CStoreDialog.class);
 
@@ -98,7 +95,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
             this.host = host;
             this.port = port;
             this.remoteAE = remoteAE;
-            this.localAE = localAE;
+            this.localAE = null == localAE ? DEFAULT_AE_TITLE : localAE;
         }
 
         public AEAddr(final String desc) {
@@ -215,7 +212,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
         @Override
         public String toString() {
             return Joiner.on(SEPARATOR).join(this);
-         }
+        }
     }
 
     private final Preferences prefs;
@@ -389,7 +386,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
         return whichFiles;
     }
 
-     private JButton getSendButton() {
+    private JButton getSendButton() {
         if (sendButton == null) {
             sendButton = new JButton(SEND_BUTTON);
             sendButton.addActionListener(this);
@@ -405,7 +402,7 @@ final class CStoreDialog extends JDialog implements ActionListener {
         return cancelButton;
     }
 
-     private JComboBox getHostComboBox() {
+    private JComboBox getHostComboBox() {
         if (hostComboBox == null) {
             hostComboBox = new JComboBox(history.getHosts());
             hostComboBox.setEditable(true);
@@ -426,7 +423,11 @@ final class CStoreDialog extends JDialog implements ActionListener {
 
     private JComboBox getLocalAEComboBox() {
         if (null == localAEComboBox) {
-            localAEComboBox = new JComboBox(history.getLocalTitles());
+            final Vector<String> titles = history.getLocalTitles();
+            if (!titles.contains(DEFAULT_AE_TITLE)) {
+                titles.add(DEFAULT_AE_TITLE);
+            }
+            localAEComboBox = new JComboBox(titles);
             localAEComboBox.setEditable(true);
             localAEComboBox.setMinimumSize(new Dimension(120, 0));
         }
