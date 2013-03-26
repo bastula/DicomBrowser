@@ -28,12 +28,23 @@ public final class Keep extends AbstractOperation implements Operation {
         this.tags = ImmutableSortedSet.of(this.tag = tag);
     }
     
+    /*
+     * (non-Javadoc)
+     * @see org.nrg.dcm.edit.Operation#affects(int)
+     */
+    public boolean affects(final int tag) {
+	return this.tag == tag;
+    }
+    
+    public int getTopTag() {
+	return tag;
+    }
+    
     /* (non-Javadoc)
      * @see org.nrg.dcm.edit.Operation#makeAction(org.dcm4che2.data.DicomObject)
      */
     public Action makeAction(final DicomObject o) throws AttributeException {
         return new Action() {
-            public SortedSet<Integer> getTags() { return tags; }         
             public void apply() {}
         };
     }

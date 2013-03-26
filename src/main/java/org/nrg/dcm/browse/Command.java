@@ -39,12 +39,12 @@ final class Command {
     private final String MULT_OP_FORMAT = " (%1$d attributes)";   // TODO: localize
 
     // One operation on a set of files
-    Command(Operation op, Collection<File> files, Map<File,Operation> replaced) {
+    Command(Operation op, Collection<File> files, Map<File,Operation> replaced, Set<Integer> affectedTags) {
         this.ops = new Operation[]{op};
         this.files = new File[1][];
         this.files[0] = files.toArray(new File[0]);
         this.replaced = Maps.newHashMap();
-        for (final int tag : op.getAffectedTags()) {
+        for (final int tag : affectedTags) {
             this.replaced.put(tag, Maps.newHashMap(replaced));
         }
     }

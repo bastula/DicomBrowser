@@ -59,7 +59,7 @@
   <groupId>org.nrg</groupId>
   <artifactId>DicomBrowser</artifactId>
   <packaging>jar</packaging>
-  <version>1.7.0b1</version>
+  <version>1.7.0b3</version>
   <name>DicomBrowser</name>
   <description>
 DicomBrowser is a GUI-based utility for viewing and modifying metadata
@@ -142,7 +142,7 @@ hundreds or thousands of image files rather than on individual images.
     <dependency>
       <groupId>org.nrg</groupId>
       <artifactId>DicomEdit</artifactId>
-      <version>2.3.0</version>
+      <version>3.0.2</version>
     </dependency>
     <dependency>
       <!-- Apple library for Mac-specific GUI -->
