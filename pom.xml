@@ -23,14 +23,13 @@
 	</configuration>
       </plugin>
      <!-- Uncomment this plugin to build a MacOS X app bundle -->
-     <!--
       <plugin>
-	<groupId>net.frontlinesms.build</groupId>
+	<groupId>org.codehaus.mojo</groupId>
 	<artifactId>osxappbundle-maven-plugin</artifactId>
-	<version>1.0</version>
+	<version>1.0-alpha-1</version>
 	<configuration>
 	  <mainClass>org.nrg.dcm.browse.DicomBrowser</mainClass>
-	  <dictionaryFile>${basedir}/src/main/app-resources/Info.plist</dictionaryFile>
+	  <dictionaryFile>src/main/app-resources/Info.plist</dictionaryFile>
 	  <iconFile>${basedir}/src/main/app-resources/DicomBrowser.icns</iconFile>
 	</configuration>
 	<executions>
@@ -42,7 +41,6 @@
 	  </execution>
 	</executions>
       </plugin>
-        -->
       <!--      -->
     </plugins>
     <resources>
