@@ -383,27 +383,33 @@ public final class CSVRemapper {
             final ScriptApplicator applicator = new ScriptApplicator(in);
             final BufferedReader tty = new BufferedReader(new InputStreamReader(System.in));
             for (final Variable v : applicator.getSortedVariables()) {
+                final String desc = v.getDescription();
                 final Value iv = v.getInitialValue();
                 final String ivs = null == iv ? null : iv.on(m);
-                System.out.print("Enter value for " + v.getDescription());
-                if (!Strings.isNullOrEmpty(ivs)) {
-                    System.out.print(" [" + iv + "]");
-                }
-                System.out.print(": ");
-                System.out.flush();
-                final String val = tty.readLine();
-                if (Strings.isNullOrEmpty(val)) {
-                    if (!Strings.isNullOrEmpty(ivs)) {
-                        v.setValue(ivs);
-                    }
+                if (v.isHidden()) {
+                    v.setValue(ivs);
                 } else {
-                    v.setValue(val);
+                    System.out.print("Enter value for " + (null == desc ? v.getName() : desc));
+                    if (!Strings.isNullOrEmpty(ivs)) {
+                        System.out.print(" [" + ivs + "]");
+                    }
+                    System.out.print(": ");
+                    System.out.flush();
+                    final String val = tty.readLine();
+                    if (Strings.isNullOrEmpty(val)) {
+                        if (!Strings.isNullOrEmpty(ivs)) {
+                            v.setValue(ivs);
+                        }
+                    } else {
+                        v.setValue(val);
+                    }
                 }
             }
             globalStatements.addAll(applicator.getStatements());
         } catch (IOException e) {
             throw e;
         } catch (Exception e) {
+
             final Logger log = LoggerFactory.getLogger(CSVRemapper.class);
             log.error("Error processing DICOM anonymization script", e);
         }
