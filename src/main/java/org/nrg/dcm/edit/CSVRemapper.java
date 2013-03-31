@@ -16,7 +16,6 @@ import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -28,12 +27,14 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
-
+import org.dcm4che2.data.DicomObject;
+import org.dcm4che2.data.Tag;
 import org.dcm4che2.net.TransferCapability;
 import org.dcm4che2.util.TagUtils;
 import org.dom4j.DocumentException;
 import org.nrg.dcm.io.BatchExporter;
 import org.nrg.dcm.io.CStoreExporter;
+import org.nrg.dcm.io.DicomFileObjectIterator;
 import org.nrg.dcm.io.DicomObjectExporter;
 import org.nrg.dcm.io.NewRootFileExporter;
 import org.nrg.dcm.io.TransferCapabilityExtractor;
@@ -192,10 +193,12 @@ public final class CSVRemapper {
     private final Collection<RemapColumn> remaps;
     private final Map<String,Map<Integer,Integer>> selectionKeysToCols;
     private final List<Statement> globalStatements = Lists.newArrayList();
+    private final DicomObject template;
     private final PrintStream messages = System.err;
 
-    public CSVRemapper(final File configFile)
+    public CSVRemapper(final File configFile, final DicomObject template)
     throws IOException,ParseException,DocumentException,InvalidCSVException {
+        this.template = template;
         final ConfigurableDirectoryRecordFactory factory = new ConfigurableDirectoryRecordFactory(configFile);
         final List<DicomTableEntry> columns = Lists.newArrayList(factory.getColumns());
 
@@ -378,14 +381,13 @@ public final class CSVRemapper {
 
     public void includeStatements(final InputStream in)
     throws IOException {
-        final Map<Integer,String> m = Collections.emptyMap();
         try {
             final ScriptApplicator applicator = new ScriptApplicator(in);
             final BufferedReader tty = new BufferedReader(new InputStreamReader(System.in));
             for (final Variable v : applicator.getSortedVariables()) {
                 final String desc = v.getDescription();
                 final Value iv = v.getInitialValue();
-                final String ivs = null == iv ? null : iv.on(m);
+                final String ivs = null == iv ? null : iv.on(template);
                 if (v.isHidden()) {
                     v.setValue(ivs);
                 } else {
@@ -473,10 +475,22 @@ public final class CSVRemapper {
             System.err.println("Must specify configuration XML if values CSV is provided.");
             System.exit(-4);
         }
+        
+        final Collection<File> infiles = Lists.newArrayList();
+        for (final String path : cli.getArgs()) {
+            infiles.add(new File(path.toString()));
+        }
+        
+        final DicomFileObjectIterator filesAndObjects = new DicomFileObjectIterator(infiles).setStopTag(Tag.PixelData);
+        if (!filesAndObjects.hasNext()) {
+            System.err.println("No DICOM objects found in " + infiles);
+            System.exit(-5);
+        }
+        final DicomObject dcmo = filesAndObjects.next().getValue();
 
         final String specXMLPath = cli.getOptionValue(configXMLOpt.getOpt());
         final File specXMLFile = null == specXMLPath ? null : new File(specXMLPath);
-        final CSVRemapper remapper = new CSVRemapper(specXMLFile);
+        final CSVRemapper remapper = new CSVRemapper(specXMLFile, dcmo);
 
         final String[] dasPaths = cli.getOptionValues(dasScriptOpt.getOpt());
         if (null != dasPaths) {
@@ -499,11 +513,6 @@ public final class CSVRemapper {
         }
 
         final URI out = toURI(cli.getOptionValue(outputOpt.getOpt()));
-
-        final Collection<File> infiles = Lists.newArrayList();
-        for (final String path : cli.getArgs()) {
-            infiles.add(new File(path.toString()));
-        }
 
         final String remapCSVPath = cli.getOptionValue(valuesOpt.getOpt());
         final File remapCSV = null == remapCSVPath ? null : new File(remapCSVPath);
