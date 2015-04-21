@@ -22,7 +22,7 @@ import javax.swing.JLabel;
  */
 final class AboutDialog extends JDialog {
   final static private long serialVersionUID = 1L;
-  final static private int MARGIN = 2;
+  final static private int MARGIN = 4;
   final static private int SPACE = 8;
   final static String TITLE;
   final static String VERSION;
@@ -59,7 +59,7 @@ final class AboutDialog extends JDialog {
     version.setAlignmentX(Component.CENTER_ALIGNMENT);
     add(version);
     
-    final JLabel wucopy = new JLabel("Copyright \u00A9 2006-2012 Washington University");
+    final JLabel wucopy = new JLabel("Copyright \u00A9 2006-2015 Washington University");
     wucopy.setBorder(margin);
     wucopy.setAlignmentX(Component.CENTER_ALIGNMENT);
     add(wucopy);
@@ -69,7 +69,7 @@ final class AboutDialog extends JDialog {
     devel.setAlignmentX(Component.CENTER_ALIGNMENT);
     add(devel);
     
-    final JLabel email = new JLabel("Questions, comments, or bugs?  Mail dicombrowser@nrg.wustl.edu");
+    final JLabel email = new JLabel("Questions, comments, or bugs? Mail dicombrowser-users@googlegroups.com");
     email.setBorder(margin);
     email.setAlignmentX(Component.CENTER_ALIGNMENT);
     add(email);

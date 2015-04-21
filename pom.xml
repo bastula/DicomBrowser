@@ -2,58 +2,6 @@
 	 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.3.2</version>
-        <configuration>
-          <source>1.5</source>
-          <target>1.5</target>
-        </configuration>
-      </plugin>
-      <plugin>
-	<artifactId>maven-assembly-plugin</artifactId>
-	<version>2.2.2</version>
-	<configuration>
-	  <descriptors>
-	    <descriptor>src/main/assembly/bin-distrib.xml</descriptor>
-	    <descriptor>src/main/assembly/jws-distrib.xml</descriptor>
-	  </descriptors>
-	</configuration>
-      </plugin>
-     <!-- Uncomment this plugin to build a MacOS X app bundle -->
-      <plugin>
-	<groupId>org.codehaus.mojo</groupId>
-	<artifactId>osxappbundle-maven-plugin</artifactId>
-	<version>1.0-alpha-1</version>
-	<configuration>
-	  <mainClass>org.nrg.dcm.browse.DicomBrowser</mainClass>
-	  <dictionaryFile>src/main/app-resources/Info.plist</dictionaryFile>
-	  <iconFile>${basedir}/src/main/app-resources/DicomBrowser.icns</iconFile>
-	</configuration>
-	<executions>
-	  <execution>
-	    <phase>package</phase>
-	    <goals>
-	      <goal>bundle</goal>
-	    </goals>
-	  </execution>
-	</executions>
-      </plugin>
-      <!--      -->
-    </plugins>
-    <resources>
-      <resource>
-	<directory>src/main/resources</directory>
-	<filtering>true</filtering>
-      </resource>
-      <resource>
-	<directory>src/main/sh</directory>
-	<filtering>true</filtering>
-      </resource>
-    </resources>
-  </build>
   <groupId>org.nrg</groupId>
   <artifactId>DicomBrowser</artifactId>
   <packaging>jar</packaging>
@@ -66,13 +14,6 @@ viewers in that it focuses on the metadata instead of the image
 content, and is suited to operating on studies and series containing
 hundreds or thousands of image files rather than on individual images.
   </description>
-  <url>http://nrg.wustl.edu/projects/DICOM/DicomBrowser.jsp</url>
-  <distributionManagement>
-    <site>
-      <id>website</id>
-      <url>scp://nrg.wustl.edu/opt/apache-tomcat-5.5.17/webapps/ROOT/projects/DICOM/DicomBrowser/</url>
-    </site>
-  </distributionManagement>
   <scm>
     <url>http://hg.xnat.org/dicombrowser</url>
   </scm>
@@ -84,14 +25,7 @@ hundreds or thousands of image files rather than on individual images.
     <developer>
       <id>karchie</id>
       <name>Kevin A. Archie</name>
-      <email>karchie@wustl.edu</email>
-      <organization>Washington University Neuroinformatics Research
-      Group</organization>
-      <organizationUrl>http://nrg.wustl.edu</organizationUrl>
-      <roles>
-	<role>Developer</role>
-      </roles>
-      <timezone>-6</timezone>
+      <email>karchie@maritim.us</email>
     </developer>
   </developers>
   <issueManagement>
@@ -103,6 +37,61 @@ hundreds or thousands of image files rather than on individual images.
       <name>XNAT License</name>
     </license>
   </licenses>
+  <profiles>
+    <profile>
+      <activation>
+	<os>
+	  <family>mac</family>
+	</os>
+      </activation>
+      <build>
+	<plugins>
+	  <plugin>
+	    <groupId>sh.tak.appbundler</groupId>
+	    <artifactId>appbundle-maven-plugin</artifactId>
+	    <version>1.0.2</version>
+	    <configuration>
+	      <mainClass>org.nrg.dcm.browse.DicomBrowser</mainClass>
+	      <dictionaryFile>MacOS/Info.plist</dictionaryFile>
+	      <iconFile>MacOS/DicomBrowser.icns</iconFile>
+	    </configuration>
+	    <executions>
+	      <execution>
+		<phase>package</phase>
+		<goals>
+		  <goal>bundle</goal>
+		</goals>
+	      </execution>
+	    </executions>
+	  </plugin>
+	</plugins>
+      </build>
+    </profile>
+  </profiles>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+	  <compilerArgument>-XDignore.symbol.file</compilerArgument>
+	  <fork>true</fork>
+        </configuration>
+      </plugin>
+    </plugins>
+    <resources>
+      <resource>
+	<directory>src/main/resources</directory>
+	<filtering>true</filtering>
+      </resource>
+      <resource>
+	<directory>src/main/sh</directory>
+	<filtering>true</filtering>
+      </resource>
+    </resources>
+  </build>
   <repositories>
     <repository>
       <id>XNAT Maven third party</id>
@@ -142,20 +131,21 @@ hundreds or thousands of image files rather than on individual images.
       <artifactId>DicomEdit</artifactId>
       <version>3.0.2</version>
     </dependency>
-    <dependency>
       <!-- Apple library for Mac-specific GUI -->
       <!-- Use a repository copy to compile against on non-Macs, -->
       <!-- but don't include it in the assembly for runtime -->
+      <!-- what used to be in ui.jar has been merged into rt.jar -->
+    <dependency>
       <groupId>com.apple</groupId>
       <artifactId>ui</artifactId>
-      <version>1.5.0</version>
+      <version>1</version>
       <scope>system</scope>
-      <systemPath>${user.home}/.m2/repository/com/apple/ui/1.5.0/ui-1.5.0.jar</systemPath>
+      <systemPath>${java.home}/lib/rt.jar</systemPath>
     </dependency>
     <dependency>
       <groupId>ij</groupId>
       <artifactId>ij</artifactId>
-      <version>1.45s</version>
+      <version>1.48v</version>
     </dependency>
     <dependency>
       <groupId>dom4j</groupId>
