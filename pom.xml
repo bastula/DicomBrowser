@@ -16,9 +16,6 @@
         hundreds or thousands of image files rather than on individual images.
     </description>
 
-    <name>NRG Common Framework</name>
-    <description>Defines the common framework for NRG services and libraries.</description>
-
     <scm>
         <connection>scm:hg:https://bitbucket.org/nrg/dicombrowser</connection>
         <url>scm:hg:https://bitbucket.org/nrg/dicombrowser</url>
