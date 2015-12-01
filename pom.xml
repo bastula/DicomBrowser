@@ -113,15 +113,40 @@
 
     <repositories>
         <repository>
-            <id>XNAT Maven third party</id>
-            <url>http://maven.xnat.org/ext-release</url>
+            <name>XNAT Release Maven Repo</name>
+            <id>org.nrg.maven.artifacts.release</id>
+            <url>http://maven.xnat.org/libs-release</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
         <repository>
-            <id>XNAT Maven NRG</id>
-            <url>http://maven.xnat.org/libs-release</url>
+            <id>XNAT External Release</id>
+            <name>XNAT Maven External Release</name>
+            <url>http://maven.xnat.org/ext-release</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <name>XNAT Snapshot Maven Repo</name>
+            <id>org.nrg.maven.artifacts.snapshot</id>
+            <url>http://maven.xnat.org/libs-snapshot</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
         </repository>
     </repositories>
-
+    
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
