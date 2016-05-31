@@ -5,7 +5,7 @@
 
     <groupId>org.nrg</groupId>
     <artifactId>DicomBrowser</artifactId>
-    <version>1.7.0b4</version>
+    <version>1.7.0b5</version>
 
     <name>DicomBrowser</name>
     <description>
@@ -51,14 +51,27 @@
         </developer>
     </developers>
 
+    <properties>
+        <xnat.app.name>DICOM Browser</xnat.app.name>
+        <java.source.version>1.7</java.source.version>
+        <java.target.version>1.7</java.target.version>
+        <project.build.sourceEncoding>ISO-8859-1</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>ISO-8859-1</project.reporting.outputEncoding>
+        <signing.keystore>${basedir}/keystore</signing.keystore>
+        <signing.alias>nrg</signing.alias>
+        <signing.storepass>keypass</signing.storepass>
+        <signing.keypass>keypass</signing.keypass>
+        <signing.tsa>http://timestamp.digicert.com</signing.tsa>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.3</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>${java.source.version}</source>
+                    <target>${java.target.version}</target>
                     <compilerArgument>-XDignore.symbol.file</compilerArgument>
                     <fork>true</fork>
                 </configuration>
@@ -74,10 +87,73 @@
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
+                            <excludeScope>test</excludeScope>
+                            <excludeScope>system</excludeScope>
                             <overWriteReleases>false</overWriteReleases>
-                            <overWriteSnapshots>true</overWriteSnapshots>
-                            <excludeTransitive>false</excludeTransitive>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jarsigner-plugin</artifactId>
+                <version>1.4</version>
+                <executions>
+                    <execution>
+                        <id>sign</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>verify</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <skip>true</skip>
+                    <keystore>${signing.keystore}</keystore>
+                    <alias>${signing.alias}</alias>
+                    <storepass>${signing.storepass}</storepass>
+                    <keypass>${signing.keypass}</keypass>
+                    <tsa>${signing.tsa}</tsa>
+                    <certs>true</certs>
+                    <excludes>
+                        <exclude>*-sources.jar</exclude>
+                        <exclude>*-javadoc.jar</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.6</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>org.nrg.dcm.browse.DicomBrowser</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptors>
+                        <descriptor>src/main/assembly/bin-distrib.xml</descriptor>
+                    </descriptors>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <finalName>${project.artifactId}-${project.version}</finalName>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
@@ -85,18 +161,16 @@
                 <groupId>org.sonatype.install4j</groupId>
                 <artifactId>install4j-maven-plugin</artifactId>
                 <version>1.1.0</version>
-                <executions>
-                    <execution>
-                        <id>compile-installers</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                        <configuration>
-                            <projectFile>${project.basedir}/src/main/installer/DicomBrowser.install4j</projectFile>
-                        </configuration>
-                    </execution>
-                </executions>
+                <configuration>
+                    <projectFile>${project.basedir}/src/main/installer/DicomBrowser.install4j</projectFile>
+                    <winKeystorePassword>${signing.storepass}</winKeystorePassword>
+                    <macKeystorePassword>${signing.storepass}</macKeystorePassword>
+                    <variables>
+                        <buildVersion>${project.version}</buildVersion>
+                        <winKeystore>${signing.winKeystore}</winKeystore>
+                        <macKeystore>${signing.macKeystore}</macKeystore>
+                    </variables>
+                </configuration>
             </plugin>
         </plugins>
         <resources>

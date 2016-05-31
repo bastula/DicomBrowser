@@ -675,8 +675,8 @@ implements ActionListener,ComponentListener,ListSelectionListener,TreeSelectionL
 
     /**
      * From the indicated window, starts opening the named files into a new window.
-     * @param frame JFrame where the open command was issues (may be null)
-     * @param files List of files to be opened (if null or zero size, opens a Chooser)
+     * @param browser    DicomBrowser instance.
+     * @param files      List of files to be opened (if null or zero size, opens a Chooser)
      */
     private static void openFiles(final DicomBrowser browser, final File...files) {
         // need to be in Swing thread to use chooseFiles
